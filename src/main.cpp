@@ -7,6 +7,8 @@
 #include "utils.h"
 #include "menus.h"
 
+#define DEBUG
+
 /* DECLARE COMPONENT OBJECTS */ 
 // LCD (address 0x27, 16 chars and 2 lines)
 LiquidCrystal_I2C lcd(0x27, 16, 2);
@@ -35,7 +37,7 @@ uint8_t registered_users = 0;
 uint8_t curr_menu = NO_MENU;
 
 // The index of the currently logged-in user (initially nobody).
-int8_t logged_user = -1;
+int8_t logged_user = NO_USER;
 
 
 // For joystick delay between levels.
@@ -111,7 +113,6 @@ void setup() {
 
 
 void loop() {
-    
     switch(curr_menu) {
     case MENU_MAIN_HELLO:
         MENU_MAIN_hello();
@@ -125,14 +126,19 @@ void loop() {
     case MENU_REGISTER_SCAN:
         MENU_REGISTER_scan();
         break;
+    case MENU_REGISTER_PIN:
+        MENU_REGISTER_pin();
+        break;
+    case MENU_LOGGED_HELLO:
+        MENU_LOGGED_hello();
+        break;
 
+
+    case MENU_ERROR:
+        MENU_error();
+        break;
     default:
-        lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print(F("WTF..."));
-        while (true) {
-            delay(500);
-        }
+        curr_menu = MENU_ERROR;
         break;
     }
 }
@@ -140,6 +146,21 @@ void loop() {
 
 /*=====================================================================================*/
 /* MENUS IMPLEMENTATIONS */
+void MENU_error() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("ERROR"));
+
+    while (true) {
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = MENU_MAIN_HELLO;
+            return;
+        }
+    }
+}
+
+
 void MENU_MAIN_hello() {
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -222,10 +243,71 @@ void MENU_REGISTER_scan() {
             continue;
         }
 
-        // Got a new card, read the UID
+        // Got a new card, read the UID.
         char uid[UID_SIZE + 1];
         extract_uid(uid);
+
+        #ifdef DEBUG
         Serial.println(uid);
+        #endif
+
+        logged_user = get_user_idx_from_uid(uid);
+        if (logged_user == NO_USER) {
+            curr_menu = MENU_ERROR;
+            return;
+        }
+
+        #ifdef DEBUG
+        Serial.println(logged_user);
+        if (logged_user != NO_USER) {
+            Serial.println(names[logged_user]);
+        }
+        Serial.println();
+        #endif
+
+        curr_menu = MENU_REGISTER_PIN;
+        return;
+    }
+}
+
+
+void MENU_REGISTER_pin() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Enter PIN:"));
+
+    uint16_t pin = get_pin_input();
+
+    if (pin == 0) {
+        // Red button was pressed.
+        curr_menu = MENU_REGISTER_SCAN;
+        return;
+    }
+
+    // PIN introduced successfuly.
+    users[logged_user].checking_sum = 0;
+    users[logged_user].economy_sum = 0;
+    users[logged_user].pin = pin;
+
+    curr_menu = MENU_LOGGED_HELLO;
+}
+
+
+void MENU_LOGGED_hello() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Hello"));
+
+    lcd.setCursor(0, 1);
+    lcd.print(names[logged_user]);
+
+    while (true) {
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            logged_user = -1;
+            curr_menu = MENU_MAIN_HELLO;
+            return;
+        }
     }
 }
 
@@ -299,4 +381,131 @@ void extract_uid(char *buff) {
 
     // Add null-terminator.
     buff[mfrc522.uid.size * 2] = '\0';
+}
+
+
+int8_t get_user_idx_from_uid(char *uid) {
+    for (uint8_t i = 0; i < MAX_USERS; i++) {
+        if (strcmp(uids[i], uid) == 0) {
+            return i;
+        }
+    }
+
+    return NO_USER;
+}
+
+
+uint16_t get_pin_input() {
+    uint16_t pin = 0;
+    uint8_t read_digit = 0;
+
+    uint8_t idx = 0;
+    uint8_t last_key = 0;  // Keep track of last key pressed
+
+    while (true) {
+        // If red button is pressed ,return 0 to signal abort.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            return 0;
+        }
+
+        // If joystick button is pressed and full pin is introduced, return the pin.
+        if (idx == PIN_SIZE && is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
+                              joy_button_stable_state, last_joy_debounce_time)) {
+            return pin;
+        }
+
+        // Read current key
+        read_digit = ttp229.GetKey16(); // non-blocking
+
+        if (read_digit != 0 && last_key == 0) {
+            // Only react if no key was previously pressed (some sort of debouncing)
+            if (read_digit == 10) { // '0' key
+                if (idx != 0) {
+                    pin = pin * 10;
+                    idx++;
+                }
+            }
+
+            else if (read_digit == 11) { // backspace
+                if (idx != 0) {
+                    pin = pin / 10;
+                    idx--;
+                }
+            }
+
+            else if (read_digit <= 9) { // normal digits
+                if (idx < PIN_SIZE) {
+                    pin = pin * 10 + read_digit;
+                    idx++;
+                }
+            }
+
+            // Update LCD
+            lcd.setCursor(0, 1);
+            lcd.print("    "); // Clear
+            lcd.setCursor(0, 1);
+            if (pin != 0) {
+                lcd.print(pin);
+            }
+        }
+
+        // Update last_key
+        if (read_digit != 0) {
+            // key is being pressed
+            last_key = read_digit;
+        } else {
+            // no key is being pressed
+            last_key = 0;     
+        }
+
+        // // Print intermiedary pin.
+        // lcd.setCursor(0, 1);
+        // lcd.print("    "); // clear the line
+        // lcd.setCursor(0, 1);
+        // if (pin != 0) {
+        //     lcd.print(pin);
+        // }
+
+        // read_digit = ttp229.GetKey16();
+
+        // // Ignore key release and keys larger than 11.
+        // if (read_digit == 0 || read_digit > 11) {
+        //     continue;
+        // }
+
+        // // Don't react if the same key is read over and over again.
+        // if (last_key != 0) {
+        //     continue;
+        // }
+
+        // // 10 is used to input 0.
+        // if (read_digit == 10) {
+        //     // Don't allow 0 as the first digit.
+        //     if (idx == 0) {
+        //         continue;
+        //     }
+
+        //     read_digit = 0;
+        // }
+
+        // // 11 is used as backspace.
+        // if (read_digit == 11) {
+        //     // Cannot delete if there is no digit.
+        //     if (idx == 0) {
+        //         continue;
+        //     }
+
+        //     pin = pin / 10;
+        //     idx--;
+        //     continue;
+        // }
+
+        // // Successfuly got idx'th digit.
+        // if (idx < PIN_SIZE) {
+        //     pin = pin * 10 + read_digit;
+        // }
+
+        // idx++;
+    }
 }

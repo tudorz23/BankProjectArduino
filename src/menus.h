@@ -4,20 +4,28 @@
 
 /* MENU CODES */
 #define NO_MENU 0
-#define MENU_MAIN_HELLO 1
-#define MENU_MAIN_LOGIN 2
-#define MENU_MAIN_REGISTER 3
-#define MENU_REGISTER_SCAN 4
+#define MENU_ERROR 1
+#define MENU_MAIN_HELLO 2
+#define MENU_MAIN_LOGIN 3
+#define MENU_MAIN_REGISTER 4
 
+#define MENU_REGISTER_SCAN 5
+#define MENU_REGISTER_PIN 6
 
-
+#define MENU_LOGGED_HELLO 7
 
 /* MENU FUNCTIONS */
+void MENU_error();
+
 void MENU_MAIN_hello();
 void MENU_MAIN_login();
 void MENU_MAIN_register();
 
 void MENU_REGISTER_scan();
+void MENU_REGISTER_pin();
+
+void MENU_LOGGED_hello();
+
 
 
 /* OTHER CONSTANT STUFF */

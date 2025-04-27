@@ -45,8 +45,10 @@ const int RED_BUTTON_PIN = 5;
 /* OTHER CONSTANTS */
 const int DEBOUNCE_DELAY = 30;
 
-const int MAX_USERS = 6;
-const int UID_SIZE = 8;
+const int8_t NO_USER = -1;
+const uint8_t MAX_USERS = 6;
+const uint8_t UID_SIZE = 8;
+const uint8_t PIN_SIZE = 4;
 
 
 /* FUNCTIONS - MECHANICAL */
@@ -66,5 +68,11 @@ bool is_button_pressed(const int pin, int &last_state, int &stable_state,
 // in HEX representation.
 void extract_uid(char *buff);
 
+
+int8_t get_user_idx_from_uid(char *uid);
+
+// Reads a 4-digit PIN code from the TTP229.
+// Return the PIN if successful, or 0 if red button was pressed.
+uint16_t get_pin_input();
 
 #endif
