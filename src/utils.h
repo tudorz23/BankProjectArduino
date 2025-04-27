@@ -43,20 +43,23 @@ const int RED_BUTTON_PIN = 5;
 
 
 /* OTHER CONSTANTS */
-#define DEBOUNCE_TIME 30
-
+const int DEBOUNCE_DELAY = 30;
 
 const int MAX_USERS = 6;
 const int UID_SIZE = 8;
 
 
-
-/* FUNCTIONS */
-
+/* FUNCTIONS - MECHANICAL */
+// Check if the joystick is moved to the right/left.
 bool joystick_to_the_right();
-
 bool joystick_to_the_left();
 
+// Check if the buttons are pressed (with debouncing).
+bool is_joy_button_pressed();
+bool is_red_button_pressed();
+
+
+/* FUNCTIONS - SOFTWARE */
 void extract_uid(char *buff);
 
 
