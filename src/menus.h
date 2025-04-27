@@ -7,6 +7,7 @@
 #define MENU_MAIN_HELLO 1
 #define MENU_MAIN_LOGIN 2
 #define MENU_MAIN_REGISTER 3
+#define MENU_REGISTER_SCAN 4
 
 
 
@@ -16,8 +17,10 @@ void MENU_MAIN_hello();
 void MENU_MAIN_login();
 void MENU_MAIN_register();
 
+void MENU_REGISTER_scan();
 
-/* OTHER STUFF */
+
+/* OTHER CONSTANT STUFF */
 #define BETWEEN_MENUS_DELAY 400
 #define JOY_RIGHT_THRESHOLD 800
 #define JOY_LEFT_THRESHOLD 200

@@ -61,6 +61,12 @@ void init_database() {
     names[4] = "Roger Federer";
     names[5] = "Lamine Yamal";
 
+    uids[0] = "3733EF00";
+    uids[1] = "3DD84F00";
+    uids[2] = "9EEA4200";
+    uids[3] = "EECA3200";
+    uids[4] = "43293000";
+    uids[5] = "C6F04800";
 }
 
 
@@ -117,11 +123,14 @@ void loop() {
     case MENU_MAIN_REGISTER:
         MENU_MAIN_register();
         break;
+    case MENU_REGISTER_SCAN:
+        MENU_REGISTER_scan();
+        break;
 
     default:
         lcd.clear();
         lcd.setCursor(0, 0);
-        lcd.print("WTF...");
+        lcd.print(F("WTF..."));
         while (true) {
             delay(500);
         }
@@ -171,13 +180,50 @@ void MENU_MAIN_register() {
     lcd.print(F("Register"));
 
     while (true) {
+        joystick_button.loop();
+
         if (joystick_to_the_left()) {
             curr_menu = MENU_MAIN_LOGIN;
+            return;
+        }
+
+        // If Joystick button is pressed, access the REGISTER menu.
+        if (joystick_button.isPressed()) {
+            curr_menu = MENU_REGISTER_SCAN;
             return;
         }
     }
 }
 
+
+void MENU_REGISTER_scan() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Scan card"));
+
+    while (true) {
+        // If red button is pressed, abort and go back to MAIN menu.
+        red_button.loop();
+        if (red_button.isPressed()) {
+            curr_menu = MENU_MAIN_REGISTER;
+            return;
+        }
+
+        // Poll for a new card.
+        if (!mfrc522.PICC_IsNewCardPresent()) {
+            continue;
+        }
+
+        if (!mfrc522.PICC_ReadCardSerial()) {
+            continue;
+        }
+
+        // Got a new card, read the UID
+        char uid[UID_SIZE + 1];
+        extract_uid(uid);
+        Serial.println(uid);
+    }
+}
 
 
 /* HELPER FUNCTIONS */
@@ -209,3 +255,17 @@ bool joystick_to_the_left() {
 
     return false;
 }
+
+
+void extract_uid(char *buff) {
+    // Read one byte (i.e. 2 hex chars) at a time.
+    // Pad with one 0 to the left if the byte can be
+    // written with only one hex char (i.e. curr_byte < 0x10).
+    for (uint8_t i = 0; i < mfrc522.uid.size; i++) {
+        sprintf(&buff[i * 2], "%02X", mfrc522.uid.uidByte[i]);
+    }
+
+    // Add null-terminator.
+    buff[mfrc522.uid.size * 2] = '\0';
+}
+

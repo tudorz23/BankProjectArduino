@@ -47,7 +47,7 @@ const int RED_BUTTON_PIN = 5;
 
 
 const int MAX_USERS = 6;
-
+const int UID_SIZE = 8;
 
 
 
@@ -56,6 +56,8 @@ const int MAX_USERS = 6;
 bool joystick_to_the_right();
 
 bool joystick_to_the_left();
+
+void extract_uid(char *buff);
 
 
 #endif
