@@ -3,7 +3,6 @@
 #include <MFRC522.h>
 #include <LiquidCrystal_I2C.h>
 #include <TTP229.h>
-#include <ezButton.h>
 
 #include "utils.h"
 #include "menus.h"
@@ -17,12 +16,6 @@ MFRC522 mfrc522(RFID_SDA_PIN, RFID_RST_PIN);
 
 // TTP229 keyboard
 TTP229 ttp229(TTP_SCL_PIN, TTP_SDO_PIN);
-
-// Joystick button
-ezButton joystick_button(JOYSTICK_SW_PIN);
-
-// Red button
-ezButton red_button(RED_BUTTON_PIN, EXTERNAL_PULLUP);
 
 
 /* DECLARE GLOBAL VARIABLES */
@@ -48,9 +41,13 @@ int8_t logged_user = -1;
 // For joystick delay between levels.
 unsigned long last_joy_delay_time = 0;
 
-// Joystick coordinates
-uint16_t joystick_x = 0;
-uint16_t joystick_y = 0;
+// For buttons debouncing.
+unsigned long last_joy_debounce_time = 0;
+unsigned long last_red_debounce_time = 0;
+
+int last_joy_button_state = HIGH;
+int last_red_button_state = HIGH;
+
 
 
 void init_database() {
@@ -85,8 +82,8 @@ void setup() {
     mfrc522.PCD_Init();
 
     // Init buttons.
-    joystick_button.setDebounceTime(DEBOUNCE_TIME);
-    red_button.setDebounceTime(DEBOUNCE_TIME);
+    pinMode(JOYSTICK_SW_PIN, INPUT_PULLUP);
+    pinMode(RED_BUTTON_PIN, INPUT);
 
     // Init RGB led and set to off.
     pinMode(LED_R_PIN, OUTPUT);
@@ -139,7 +136,7 @@ void loop() {
 }
 
 
-
+/*=====================================================================================*/
 /* MENUS IMPLEMENTATIONS */
 void MENU_MAIN_hello() {
     lcd.clear();
@@ -180,15 +177,13 @@ void MENU_MAIN_register() {
     lcd.print(F("Register"));
 
     while (true) {
-        joystick_button.loop();
-
         if (joystick_to_the_left()) {
             curr_menu = MENU_MAIN_LOGIN;
             return;
         }
 
         // If Joystick button is pressed, access the REGISTER menu.
-        if (joystick_button.isPressed()) {
+        if (is_joy_button_pressed()) {
             curr_menu = MENU_REGISTER_SCAN;
             return;
         }
@@ -203,8 +198,7 @@ void MENU_REGISTER_scan() {
 
     while (true) {
         // If red button is pressed, abort and go back to MAIN menu.
-        red_button.loop();
-        if (red_button.isPressed()) {
+        if (is_red_button_pressed()) {
             curr_menu = MENU_MAIN_REGISTER;
             return;
         }
@@ -226,7 +220,8 @@ void MENU_REGISTER_scan() {
 }
 
 
-/* HELPER FUNCTIONS */
+/*=====================================================================================*/
+/* FUNCTIONS - MECHANICAL */
 bool joystick_to_the_right() {
     int x_val = analogRead(JOYSTICK_VRX_PIN);
 
@@ -257,6 +252,46 @@ bool joystick_to_the_left() {
 }
 
 
+// Debouncing for the joystick button.
+bool is_joy_button_pressed() {
+    int curr_state = digitalRead(JOYSTICK_SW_PIN);
+    if (curr_state != last_joy_button_state) {
+        last_joy_debounce_time = millis();
+    }
+
+    last_joy_button_state = curr_state;
+
+    if (millis() - last_joy_debounce_time > DEBOUNCE_DELAY) {
+        if (curr_state == LOW) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+// Debouncing for the red button.
+bool is_red_button_pressed() {
+    int curr_state = digitalRead(RED_BUTTON_PIN);
+    if (curr_state != last_red_button_state) {
+        last_red_debounce_time = millis();
+    }
+
+    last_red_button_state = curr_state;
+
+    if (millis() - last_red_debounce_time > DEBOUNCE_DELAY) {
+        if (curr_state == LOW) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+/*=====================================================================================*/
+/* FUNCTIONS - SOFTWARE */
 void extract_uid(char *buff) {
     // Read one byte (i.e. 2 hex chars) at a time.
     // Pad with one 0 to the left if the byte can be
