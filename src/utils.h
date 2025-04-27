@@ -50,16 +50,20 @@ const int UID_SIZE = 8;
 
 
 /* FUNCTIONS - MECHANICAL */
-// Check if the joystick is moved to the right/left.
+// Check if the joystick is moved to the right.
 bool joystick_to_the_right();
+
+// Check if the joystick is moved to the left.
 bool joystick_to_the_left();
 
-// Check if the buttons are pressed (with debouncing).
-bool is_joy_button_pressed();
-bool is_red_button_pressed();
+// Check if a button is pressed (with debouncing).
+bool is_button_pressed(const int pin, int &last_state, int &stable_state,
+                       unsigned long &last_debounce_time);
 
 
 /* FUNCTIONS - SOFTWARE */
+// Extract the uid from the mfrc522 and save it as a char array,
+// in HEX representation.
 void extract_uid(char *buff);
 
 

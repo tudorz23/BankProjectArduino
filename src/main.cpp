@@ -46,7 +46,9 @@ unsigned long last_joy_debounce_time = 0;
 unsigned long last_red_debounce_time = 0;
 
 int last_joy_button_state = HIGH;
+int joy_button_stable_state = HIGH;
 int last_red_button_state = HIGH;
+int red_button_stable_state = HIGH;
 
 
 
@@ -183,8 +185,15 @@ void MENU_MAIN_register() {
         }
 
         // If Joystick button is pressed, access the REGISTER menu.
-        if (is_joy_button_pressed()) {
+        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
+                              joy_button_stable_state, last_joy_debounce_time)) {
             curr_menu = MENU_REGISTER_SCAN;
+            return;
+        }
+
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = MENU_MAIN_HELLO;
             return;
         }
     }
@@ -198,7 +207,8 @@ void MENU_REGISTER_scan() {
 
     while (true) {
         // If red button is pressed, abort and go back to MAIN menu.
-        if (is_red_button_pressed()) {
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
             curr_menu = MENU_MAIN_REGISTER;
             return;
         }
@@ -252,37 +262,24 @@ bool joystick_to_the_left() {
 }
 
 
-// Debouncing for the joystick button.
-bool is_joy_button_pressed() {
-    int curr_state = digitalRead(JOYSTICK_SW_PIN);
-    if (curr_state != last_joy_button_state) {
-        last_joy_debounce_time = millis();
+bool is_button_pressed(const int pin, int &last_state, int &stable_state,
+                       unsigned long &last_debounce_time) {
+    int reading = digitalRead(pin);
+
+    if (reading != last_state) {
+        last_debounce_time = millis();
     }
 
-    last_joy_button_state = curr_state;
+    last_state = reading;
 
-    if (millis() - last_joy_debounce_time > DEBOUNCE_DELAY) {
-        if (curr_state == LOW) {
-            return true;
-        }
-    }
+    if ((millis() - last_debounce_time) > DEBOUNCE_DELAY) {
+        // Check if the button state has changed (since the last stable state)
+        if (reading != stable_state) {
+            stable_state = reading;
 
-    return false;
-}
-
-
-// Debouncing for the red button.
-bool is_red_button_pressed() {
-    int curr_state = digitalRead(RED_BUTTON_PIN);
-    if (curr_state != last_red_button_state) {
-        last_red_debounce_time = millis();
-    }
-
-    last_red_button_state = curr_state;
-
-    if (millis() - last_red_debounce_time > DEBOUNCE_DELAY) {
-        if (curr_state == LOW) {
-            return true;
+            if (stable_state == LOW) {
+                return true;
+            }
         }
     }
 
@@ -303,4 +300,3 @@ void extract_uid(char *buff) {
     // Add null-terminator.
     buff[mfrc522.uid.size * 2] = '\0';
 }
-
