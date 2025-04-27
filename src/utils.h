@@ -75,4 +75,11 @@ int8_t get_user_idx_from_uid(char *uid);
 // Return the PIN if successful, or 0 if red button was pressed.
 uint16_t get_pin_input();
 
+
+// Marks an user as registered using bitwise operations.
+void register_user(int8_t idx);
+
+// Returns true if the user is registered, false otherwise.
+bool is_user_registered(int8_t idx);
+
 #endif

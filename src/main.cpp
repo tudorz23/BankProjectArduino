@@ -123,14 +123,32 @@ void loop() {
     case MENU_MAIN_REGISTER:
         MENU_MAIN_register();
         break;
+
     case MENU_REGISTER_SCAN:
         MENU_REGISTER_scan();
         break;
     case MENU_REGISTER_PIN:
         MENU_REGISTER_pin();
         break;
+
+    case MENU_LOGIN_SCAN:
+        MENU_LOGIN_scan();
+        break;
+    case MENU_LOGIN_NOT_REGISTERED:
+        MENU_LOGIN_not_registered();
+        break;
+    case MENU_LOGIN_ENTER_PIN:
+        MENU_LOGIN_enter_pin();
+        break;
+    case MENU_LOGIN_WRONG_PIN:
+        MENU_LOGIN_wrong_pin();
+        break;
+
     case MENU_LOGGED_HELLO:
         MENU_LOGGED_hello();
+        break;
+    case MENU_LOGGED_LOGOUT:
+        MENU_LOGGED_logout();
         break;
 
 
@@ -190,6 +208,13 @@ void MENU_MAIN_login() {
             curr_menu = MENU_MAIN_REGISTER;
             return;
         }
+
+        // If Joystick button is pressed, access the LOGIN menu.
+        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
+                              joy_button_stable_state, last_joy_debounce_time)) {
+            curr_menu = MENU_LOGIN_SCAN;
+            return;
+        }
     }
 }
 
@@ -212,11 +237,11 @@ void MENU_MAIN_register() {
             return;
         }
 
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = MENU_MAIN_HELLO;
-            return;
-        }
+        // if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+        //                       red_button_stable_state, last_red_debounce_time)) {
+        //     curr_menu = MENU_MAIN_HELLO;
+        //     return;
+        // }
     }
 }
 
@@ -285,11 +310,124 @@ void MENU_REGISTER_pin() {
     }
 
     // PIN introduced successfuly.
+    register_user(logged_user);
+
     users[logged_user].checking_sum = 0;
     users[logged_user].economy_sum = 0;
     users[logged_user].pin = pin;
 
     curr_menu = MENU_LOGGED_HELLO;
+}
+
+
+void MENU_LOGIN_scan() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Scan card"));
+
+    while (true) {
+        // If red button is pressed, abort and go back to MAIN menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = MENU_MAIN_LOGIN;
+            return;
+        }
+
+        // Poll for a new card.
+        if (!mfrc522.PICC_IsNewCardPresent()) {
+            continue;
+        }
+
+        if (!mfrc522.PICC_ReadCardSerial()) {
+            continue;
+        }
+
+        // Got a new card, read the UID.
+        char uid[UID_SIZE + 1];
+        extract_uid(uid);
+
+        #ifdef DEBUG
+        Serial.println(uid);
+        #endif
+
+        logged_user = get_user_idx_from_uid(uid);
+        if (logged_user == NO_USER) {
+            curr_menu = MENU_ERROR;
+            return;
+        }
+
+        #ifdef DEBUG
+        Serial.println(logged_user);
+        if (logged_user != NO_USER) {
+            Serial.println(names[logged_user]);
+        }
+        Serial.println();
+        #endif
+
+        // Check if the user is registered.
+        if (!is_user_registered(logged_user)) {
+            curr_menu = MENU_LOGIN_NOT_REGISTERED;
+            return;
+        }
+
+        curr_menu = MENU_LOGIN_ENTER_PIN;
+        return;
+    }
+}
+
+
+void MENU_LOGIN_not_registered() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Not registered"));
+
+    while (true) {
+        // If red button is pressed, abort and go back to LOGIN SCAN menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = MENU_LOGIN_SCAN;
+            return;
+        }
+    }
+}
+
+
+void MENU_LOGIN_enter_pin() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Enter PIN:"));
+
+    uint16_t pin = get_pin_input();
+
+    if (pin == 0) {
+        // Red button was pressed.
+        curr_menu = MENU_LOGIN_SCAN;
+        return;
+    }
+
+    // Check if the PIN is correct.
+    if (pin != users[logged_user].pin) {
+        curr_menu = MENU_LOGIN_WRONG_PIN;
+        return;
+    }
+
+    curr_menu = MENU_LOGGED_HELLO;
+}
+
+
+void MENU_LOGIN_wrong_pin() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Wrong PIN"));
+
+    while (true) {
+        // If red button is pressed, abort and go back to LOGIN_ENTER_PIN menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = MENU_LOGIN_ENTER_PIN;
+            return;
+        }
+    }
 }
 
 
@@ -302,10 +440,34 @@ void MENU_LOGGED_hello() {
     lcd.print(names[logged_user]);
 
     while (true) {
+        // If red button is pressed, got to LOGOUT menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = MENU_LOGGED_LOGOUT;
+            return;
+        }
+    }
+}
+
+
+void MENU_LOGGED_logout() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Surely logout?"));
+
+    while (true) {
+        // If the joystick button is pressed, confirm the logout.
+        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
+                              joy_button_stable_state, last_joy_debounce_time)) {
             logged_user = -1;
             curr_menu = MENU_MAIN_HELLO;
+            return;
+        }
+
+        // If the red button is pressed, cancel the logout.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = MENU_LOGGED_HELLO;
             return;
         }
     }
@@ -415,35 +577,39 @@ uint16_t get_pin_input() {
             return pin;
         }
 
-        // Read current key
-        read_digit = ttp229.GetKey16(); // non-blocking
+        // Read current key (non-blocking).
+        read_digit = ttp229.GetKey16();
 
+        // Only react if no key was previously pressed (to avoid accidental multiple sampling).
         if (read_digit != 0 && last_key == 0) {
-            // Only react if no key was previously pressed (some sort of debouncing)
-            if (read_digit == 10) { // '0' key
+            // '0' key
+            if (read_digit == 10) {
                 if (idx != 0) {
                     pin = pin * 10;
                     idx++;
                 }
             }
 
-            else if (read_digit == 11) { // backspace
+            // Backspace
+            else if (read_digit == 11) {
+                // Can't delete if there is no digit.
                 if (idx != 0) {
                     pin = pin / 10;
                     idx--;
                 }
             }
 
-            else if (read_digit <= 9) { // normal digits
+            // Normal digits
+            else if (read_digit <= 9) { 
                 if (idx < PIN_SIZE) {
                     pin = pin * 10 + read_digit;
                     idx++;
                 }
             }
 
-            // Update LCD
+            // Print intermediary pin
             lcd.setCursor(0, 1);
-            lcd.print("    "); // Clear
+            lcd.print("    "); // clear
             lcd.setCursor(0, 1);
             if (pin != 0) {
                 lcd.print(pin);
@@ -458,54 +624,15 @@ uint16_t get_pin_input() {
             // no key is being pressed
             last_key = 0;     
         }
-
-        // // Print intermiedary pin.
-        // lcd.setCursor(0, 1);
-        // lcd.print("    "); // clear the line
-        // lcd.setCursor(0, 1);
-        // if (pin != 0) {
-        //     lcd.print(pin);
-        // }
-
-        // read_digit = ttp229.GetKey16();
-
-        // // Ignore key release and keys larger than 11.
-        // if (read_digit == 0 || read_digit > 11) {
-        //     continue;
-        // }
-
-        // // Don't react if the same key is read over and over again.
-        // if (last_key != 0) {
-        //     continue;
-        // }
-
-        // // 10 is used to input 0.
-        // if (read_digit == 10) {
-        //     // Don't allow 0 as the first digit.
-        //     if (idx == 0) {
-        //         continue;
-        //     }
-
-        //     read_digit = 0;
-        // }
-
-        // // 11 is used as backspace.
-        // if (read_digit == 11) {
-        //     // Cannot delete if there is no digit.
-        //     if (idx == 0) {
-        //         continue;
-        //     }
-
-        //     pin = pin / 10;
-        //     idx--;
-        //     continue;
-        // }
-
-        // // Successfuly got idx'th digit.
-        // if (idx < PIN_SIZE) {
-        //     pin = pin * 10 + read_digit;
-        // }
-
-        // idx++;
     }
+}
+
+
+void register_user(int8_t idx) {
+    registered_users |= (1 << idx);
+}
+
+
+bool is_user_registered(int8_t idx) {
+    return (registered_users & (1 << idx)) != 0;
 }
