@@ -106,7 +106,7 @@ void setup() {
     init_database();
 
     // Start from the HELLO menu.
-    curr_menu = MENU_MAIN_HELLO;
+    curr_menu = MENU_START_HELLO;
 
     delay(2000);
 }
@@ -114,14 +114,14 @@ void setup() {
 
 void loop() {
     switch(curr_menu) {
-    case MENU_MAIN_HELLO:
-        MENU_MAIN_hello();
+    case MENU_START_HELLO:
+        MENU_START_hello();
         break;
-    case MENU_MAIN_LOGIN:
-        MENU_MAIN_login();
+    case MENU_START_LOGIN:
+        MENU_START_login();
         break;
-    case MENU_MAIN_REGISTER:
-        MENU_MAIN_register();
+    case MENU_START_REGISTER:
+        MENU_START_register();
         break;
 
     case MENU_REGISTER_SCAN:
@@ -172,40 +172,40 @@ void MENU_error() {
     while (true) {
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = MENU_MAIN_HELLO;
+            curr_menu = MENU_START_HELLO;
             return;
         }
     }
 }
 
 
-void MENU_MAIN_hello() {
+void MENU_START_hello() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Welcome!"));
 
     while (true) {
         if (joystick_to_the_right()) {
-            curr_menu = MENU_MAIN_LOGIN;
+            curr_menu = MENU_START_LOGIN;
             return;
         }
     }
 }
 
 
-void MENU_MAIN_login() {
+void MENU_START_login() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Login"));
 
     while (true) {
         if (joystick_to_the_left()) {
-            curr_menu = MENU_MAIN_HELLO;
+            curr_menu = MENU_START_HELLO;
             return;
         }
 
         if (joystick_to_the_right()) {
-            curr_menu = MENU_MAIN_REGISTER;
+            curr_menu = MENU_START_REGISTER;
             return;
         }
 
@@ -219,14 +219,14 @@ void MENU_MAIN_login() {
 }
 
 
-void MENU_MAIN_register() {
+void MENU_START_register() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Register"));
 
     while (true) {
         if (joystick_to_the_left()) {
-            curr_menu = MENU_MAIN_LOGIN;
+            curr_menu = MENU_START_LOGIN;
             return;
         }
 
@@ -236,12 +236,6 @@ void MENU_MAIN_register() {
             curr_menu = MENU_REGISTER_SCAN;
             return;
         }
-
-        // if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-        //                       red_button_stable_state, last_red_debounce_time)) {
-        //     curr_menu = MENU_MAIN_HELLO;
-        //     return;
-        // }
     }
 }
 
@@ -252,10 +246,10 @@ void MENU_REGISTER_scan() {
     lcd.print(F("Scan card"));
 
     while (true) {
-        // If red button is pressed, abort and go back to MAIN menu.
+        // If red button is pressed, abort scanning and go back to START menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = MENU_MAIN_REGISTER;
+            curr_menu = MENU_START_REGISTER;
             return;
         }
 
@@ -316,6 +310,10 @@ void MENU_REGISTER_pin() {
     users[logged_user].economy_sum = 0;
     users[logged_user].pin = pin;
 
+    #ifdef DEBUG
+    Serial.println(pin);
+    #endif
+
     curr_menu = MENU_LOGGED_HELLO;
 }
 
@@ -326,10 +324,10 @@ void MENU_LOGIN_scan() {
     lcd.print(F("Scan card"));
 
     while (true) {
-        // If red button is pressed, abort and go back to MAIN menu.
+        // If red button is pressed, abort scanning and go back to START menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = MENU_MAIN_LOGIN;
+            curr_menu = MENU_START_LOGIN;
             return;
         }
 
@@ -366,6 +364,7 @@ void MENU_LOGIN_scan() {
 
         // Check if the user is registered.
         if (!is_user_registered(logged_user)) {
+            logged_user = NO_USER;
             curr_menu = MENU_LOGIN_NOT_REGISTERED;
             return;
         }
@@ -382,7 +381,7 @@ void MENU_LOGIN_not_registered() {
     lcd.print(F("Not registered"));
 
     while (true) {
-        // If red button is pressed, abort and go back to LOGIN SCAN menu.
+        // If red button is pressed, go back to LOGIN SCAN menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
             curr_menu = MENU_LOGIN_SCAN;
@@ -401,6 +400,7 @@ void MENU_LOGIN_enter_pin() {
 
     if (pin == 0) {
         // Red button was pressed.
+        logged_user = NO_USER;
         curr_menu = MENU_LOGIN_SCAN;
         return;
     }
@@ -460,7 +460,7 @@ void MENU_LOGGED_logout() {
         if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
                               joy_button_stable_state, last_joy_debounce_time)) {
             logged_user = -1;
-            curr_menu = MENU_MAIN_HELLO;
+            curr_menu = MENU_START_HELLO;
             return;
         }
 

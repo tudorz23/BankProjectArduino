@@ -5,9 +5,10 @@
 /* MENU CODES */
 #define NO_MENU 0
 #define MENU_ERROR 1
-#define MENU_MAIN_HELLO 2
-#define MENU_MAIN_LOGIN 3
-#define MENU_MAIN_REGISTER 4
+
+#define MENU_START_HELLO 2
+#define MENU_START_LOGIN 3
+#define MENU_START_REGISTER 4
 
 #define MENU_REGISTER_SCAN 5
 #define MENU_REGISTER_PIN 6
@@ -23,9 +24,9 @@
 /* MENU FUNCTIONS */
 void MENU_error();
 
-void MENU_MAIN_hello();
-void MENU_MAIN_login();
-void MENU_MAIN_register();
+void MENU_START_hello();
+void MENU_START_login();
+void MENU_START_register();
 
 void MENU_REGISTER_scan();
 void MENU_REGISTER_pin();
