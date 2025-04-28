@@ -1,6 +1,7 @@
 #ifndef MENUS_H
 #define MENUS_H
 
+#include "Arduino.h"
 
 /* MENU CODES */
 #define NO_MENU 0
@@ -21,29 +22,52 @@
 #define MENU_LOGGED_HELLO 11
 #define MENU_LOGGED_LOGOUT 12
 
-/* MENU FUNCTIONS */
+
+/* GLOBAL VARIABLE */
+extern uint8_t curr_menu;
+
+
+/* ERROR menu */
 void MENU_error();
 
+
+/*=====================================================================================*/
+/* START menus */
 void MENU_START_hello();
+
 void MENU_START_login();
+
 void MENU_START_register();
 
+
+/*=====================================================================================*/
+/* REGISTER menus */
+
+// Alters `logged_user`
 void MENU_REGISTER_scan();
+
+// Alters `registered_user`, `users[logged_user]`
 void MENU_REGISTER_pin();
 
+
+/*=====================================================================================*/
+/* LOGIN menus */
+
+// Alters `logged_user`
 void MENU_LOGIN_scan();
+
 void MENU_LOGIN_not_registered();
+
+// Alters `logged_user`
 void MENU_LOGIN_enter_pin();
+
 void MENU_LOGIN_wrong_pin();
 
+
+/*=====================================================================================*/
+/* LOGGED menus */
 void MENU_LOGGED_hello();
 void MENU_LOGGED_logout();
 
-
-
-/* OTHER CONSTANT STUFF */
-#define BETWEEN_MENUS_DELAY 400
-#define JOY_RIGHT_THRESHOLD 800
-#define JOY_LEFT_THRESHOLD 200
 
 #endif
