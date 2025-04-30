@@ -6,7 +6,7 @@
 #include <MFRC522.h>
 #include <TTP229.h>
 
-#define DEBUG
+// #define DEBUG
 
 
 /* USER STRUCTURE */
@@ -14,8 +14,11 @@ struct User {
     // Sum in the checking account
     uint32_t checking_sum;
 
-    // Sum in the economy account
+    // Sum in the economy account (with interest)
     float economy_sum;
+
+    // Value of the wdt_counter when the user has last had interest added.
+    uint16_t last_interest_update_time;
 
     // PIN code
     uint16_t pin;

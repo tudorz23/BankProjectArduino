@@ -146,16 +146,39 @@ void MENU_REGISTER_scan() {
             return;
         }
 
+        if (is_user_registered(logged_user)) {
+            // User already registered.
+            logged_user = NO_USER;
+            curr_menu = MENU_REGISTER_ALREADY_REG;
+            return;
+        }
+
         #ifdef DEBUG
         Serial.println(logged_user);
-        if (logged_user != NO_USER) {
-            Serial.println(names[logged_user]);
-        }
+        Serial.println(names[logged_user]);
         Serial.println();
         #endif
 
         curr_menu = MENU_REGISTER_PIN;
         return;
+    }
+}
+
+
+void MENU_REGISTER_already_reg() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Already"));
+    lcd.setCursor(0, 1);
+    lcd.print(F("registered"));
+
+    while (true) {
+        // If red button is pressed, go back to REGISTER SCAN menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = MENU_REGISTER_SCAN;
+            return;
+        }
     }
 }
 
@@ -178,6 +201,7 @@ void MENU_REGISTER_pin() {
 
     users[logged_user].checking_sum = 0;
     users[logged_user].economy_sum = 0;
+    users[logged_user].last_interest_update_time = wdt_counter;
     users[logged_user].pin = pin;
 
     #ifdef DEBUG
@@ -229,9 +253,7 @@ void MENU_LOGIN_scan() {
 
         #ifdef DEBUG
         Serial.println(logged_user);
-        if (logged_user != NO_USER) {
-            Serial.println(names[logged_user]);
-        }
+        Serial.println(names[logged_user]);
         Serial.println();
         #endif
 
@@ -254,7 +276,7 @@ void MENU_LOGIN_not_registered() {
     lcd.print(F("Not registered"));
 
     while (true) {
-        // If red button is pressed, go back to LOGIN SCAN menu.
+        // If red button is pressed, go back to LOGIN_SCAN menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
             curr_menu = MENU_LOGIN_SCAN;
@@ -294,7 +316,7 @@ void MENU_LOGIN_wrong_pin() {
     lcd.print(F("Wrong PIN"));
 
     while (true) {
-        // If red button is pressed, abort and go back to LOGIN_ENTER_PIN menu.
+        // If red button is pressed, go back to LOGIN_ENTER_PIN menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
             curr_menu = MENU_LOGIN_ENTER_PIN;
@@ -316,7 +338,73 @@ void MENU_LOGGED_hello() {
     lcd.print(names[logged_user]);
 
     while (true) {
-        // If red button is pressed, got to LOGOUT menu.
+        if (joystick_to_the_right()) {
+            curr_menu = MENU_LOGGED_MAIN_ACC;
+            return;
+        }
+
+        // If red button is pressed, go to LOGOUT menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = MENU_LOGGED_LOGOUT;
+            return;
+        }
+    }
+}
+
+
+void MENU_LOGGED_main_acc() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Main acc"));
+
+    while (true) {
+        if (joystick_to_the_left()) {
+            curr_menu = MENU_LOGGED_HELLO;
+            return;
+        }
+
+        if (joystick_to_the_right()) {
+            curr_menu = MENU_LOGGED_ECO_ACC;
+            return;
+        }
+
+        // If Joystick button is pressed, access the MAIN_ACC menu.
+        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
+                              joy_button_stable_state, last_joy_debounce_time)) {
+            curr_menu = MENU_MAIN_ACC_SUM;
+            return;
+        }
+
+        // If red button is pressed, go to LOGOUT menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = MENU_LOGGED_LOGOUT;
+            return;
+        }
+    }
+}
+
+
+void MENU_LOGGED_eco_acc() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Eco acc"));
+
+    while (true) {
+        if (joystick_to_the_left()) {
+            curr_menu = MENU_LOGGED_MAIN_ACC;
+            return;
+        }
+
+        // If Joystick button is pressed, access the ECO_ACC menu.
+        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
+                              joy_button_stable_state, last_joy_debounce_time)) {
+            curr_menu = MENU_ECO_ACC_SUM;
+            return;
+        }
+
+        // If red button is pressed, go to LOGOUT menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
             curr_menu = MENU_LOGGED_LOGOUT;
@@ -335,7 +423,7 @@ void MENU_LOGGED_logout() {
         // If the joystick button is pressed, confirm the logout.
         if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
                               joy_button_stable_state, last_joy_debounce_time)) {
-            logged_user = -1;
+            logged_user = NO_USER;
             curr_menu = MENU_START_HELLO;
             return;
         }
@@ -349,6 +437,47 @@ void MENU_LOGGED_logout() {
     }
 }
 
+
+/*=====================================================================================*/
+/* MAIN_ACC menus */
+void MENU_MAIN_ACC_sum() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Main acc sum:"));
+    lcd.setCursor(0, 1);
+    lcd.print(users[logged_user].checking_sum);
+
+    while (true) {
+        // If red button is pressed, go to LOGGED_MAIN_ACC menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = MENU_LOGGED_MAIN_ACC;
+            return;
+        }
+    }
+}
+
+
+/*=====================================================================================*/
+/* ECO_ACC menus */
+void MENU_ECO_ACC_sum() {
+    // TODO: Compute new eco sum after interest.
+
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Eco acc sum:"));
+    lcd.setCursor(0, 1);
+    lcd.print(users[logged_user].economy_sum);
+
+    while (true) {
+        // If red button is pressed, go to LOGGED_ECO_ACC menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = MENU_LOGGED_ECO_ACC;
+            return;
+        }
+    }
+}
 
 
 /*=====================================================================================*/

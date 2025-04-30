@@ -114,7 +114,7 @@ void setup() {
     pinMode(LED_G_PIN, OUTPUT);
     pinMode(LED_B_PIN, OUTPUT);
 
-    analogWrite(LED_R_PIN, 150);
+    analogWrite(LED_R_PIN, 0);
     analogWrite(LED_G_PIN, 0);
     analogWrite(LED_B_PIN, 0);
 
@@ -153,6 +153,9 @@ void loop() {
     case MENU_REGISTER_SCAN:
         MENU_REGISTER_scan();
         break;
+    case MENU_REGISTER_ALREADY_REG:
+        MENU_REGISTER_already_reg();
+        break;
     case MENU_REGISTER_PIN:
         MENU_REGISTER_pin();
         break;
@@ -175,8 +178,24 @@ void loop() {
     case MENU_LOGGED_HELLO:
         MENU_LOGGED_hello();
         break;
+    case MENU_LOGGED_MAIN_ACC:
+        MENU_LOGGED_main_acc();
+        break;
+    case MENU_LOGGED_ECO_ACC:
+        MENU_LOGGED_eco_acc();
+        break;
     case MENU_LOGGED_LOGOUT:
         MENU_LOGGED_logout();
+        break;
+
+    // MAIN_ACC menus
+    case MENU_MAIN_ACC_SUM:
+        MENU_MAIN_ACC_sum();
+        break;
+    
+    // ECO_ACC menus
+    case MENU_ECO_ACC_SUM:
+        MENU_ECO_ACC_sum();
         break;
 
     // DEBUG menus
