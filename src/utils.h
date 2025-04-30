@@ -2,6 +2,12 @@
 #define UTILS_H
 
 #include <Arduino.h>
+#include <LiquidCrystal_I2C.h>
+#include <MFRC522.h>
+#include <TTP229.h>
+
+#define DEBUG
+
 
 /* USER STRUCTURE */
 struct User {
@@ -16,42 +22,79 @@ struct User {
 };
 
 
+
+/*=====================================================================================*/
+/* CONSTANTS */
+
+constexpr int BETWEEN_MENUS_DELAY = 400;
+constexpr int JOY_RIGHT_THRESHOLD = 800;
+constexpr int JOY_LEFT_THRESHOLD = 200;
+
+constexpr int DEBOUNCE_DELAY = 30;
+
+constexpr int8_t NO_USER = -1;
+constexpr uint8_t MAX_USERS = 6;
+constexpr uint8_t UID_SIZE = 8;
+constexpr uint8_t PIN_SIZE = 4;
+
+
+
+/*=====================================================================================*/
 /* COMPONENT PINS */
+
 // Card reader
-const int RFID_SDA_PIN = 8;
-const int RFID_RST_PIN = 7;
+constexpr int RFID_SDA_PIN = 8;
+constexpr int RFID_RST_PIN = 7;
 
 // Joystick
-const int JOYSTICK_VRX_PIN = A0;
-const int JOYSTICK_VRY_PIN = A1;
-const int JOYSTICK_SW_PIN = A2;
+constexpr int JOYSTICK_VRX_PIN = A0;
+constexpr int JOYSTICK_VRY_PIN = A1;
+constexpr int JOYSTICK_SW_PIN = A2;
 
 // TTP229 keyboard
-const int TTP_SCL_PIN = 4; // The pin number of the clock pin.
-const int TTP_SDO_PIN = 2; // The pin number of the data pin.
+constexpr int TTP_SCL_PIN = 4; // The pin number of the clock pin.
+constexpr int TTP_SDO_PIN = 2; // The pin number of the data pin.
 
 // RGB led
-const int LED_R_PIN = 10;
-const int LED_G_PIN = 9;
-const int LED_B_PIN = 6;
+constexpr int LED_R_PIN = 10;
+constexpr int LED_G_PIN = 9;
+constexpr int LED_B_PIN = 6;
 
 // Buzzer
-const int BUZZER_PIN = 3;
+constexpr int BUZZER_PIN = 3;
 
 // Red button
-const int RED_BUTTON_PIN = 5;
+constexpr int RED_BUTTON_PIN = 5;
 
 
-/* OTHER CONSTANTS */
-const int DEBOUNCE_DELAY = 30;
 
-const int8_t NO_USER = -1;
-const uint8_t MAX_USERS = 6;
-const uint8_t UID_SIZE = 8;
-const uint8_t PIN_SIZE = 4;
+/*=====================================================================================*/
+/* GLOBAL VARIABLES (shared with other files) */
+
+extern LiquidCrystal_I2C lcd;
+extern MFRC522 mfrc522;
+extern TTP229 ttp229;
+
+extern User users[MAX_USERS];
+extern const char *names[MAX_USERS];
+extern const char *uids[MAX_USERS];
+extern uint8_t registered_users;
+extern int8_t logged_user;
+
+extern unsigned long last_joy_delay_time;
+extern unsigned long last_joy_debounce_time;
+extern unsigned long last_red_debounce_time;
+
+extern int last_joy_button_state;
+extern int joy_button_stable_state;
+extern int last_red_button_state;
+extern int red_button_stable_state;
 
 
-/* FUNCTIONS - MECHANICAL */
+
+/*=====================================================================================*/
+/* FUNCTIONS - INTERFACING MECHANICAL COMPONENTS */
+
 // Check if the joystick is moved to the right.
 bool joystick_to_the_right();
 
@@ -63,7 +106,10 @@ bool is_button_pressed(const int pin, int &last_state, int &stable_state,
                        unsigned long &last_debounce_time);
 
 
-/* FUNCTIONS - SOFTWARE */
+
+/*=====================================================================================*/
+/* FUNCTIONS - PURE SOFTWARE */
+
 // Extract the uid from the mfrc522 and save it as a char array,
 // in HEX representation.
 void extract_uid(char *buff);
@@ -81,5 +127,6 @@ void register_user(int8_t idx);
 
 // Returns true if the user is registered, false otherwise.
 bool is_user_registered(int8_t idx);
+
 
 #endif
