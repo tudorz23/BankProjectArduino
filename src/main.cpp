@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "menus.h"
+#include <avr/wdt.h>
 
 /* DECLARE COMPONENT OBJECTS */ 
 // LCD (address 0x27, 16 chars and 2 lines)
@@ -44,6 +45,9 @@ int joy_button_stable_state = HIGH;
 int last_red_button_state = HIGH;
 int red_button_stable_state = HIGH;
 
+// To be incremented by the WDT ISR every 4 seconds.
+volatile uint16_t wdt_counter = 0;
+
 
 void init_database() {
     names[0] = "Lewis Hamilton";
@@ -62,6 +66,32 @@ void init_database() {
 }
 
 
+// WDT Interrupt Service Routine
+ISR(WDT_vect) {
+    wdt_counter++;
+}
+
+
+// Setup the Watchdog timer to generate an interrupt every 4 seconds,
+// to manage an interest gain in the economy accounts.
+void watchdog_setup() {
+    // Temporarily disable interrupts
+    cli();
+
+    // CLear Watchdog System Reset Flag
+    MCUSR &= ~(1 << WDRF);
+
+    // Set Watchdog Change Enable and Watchdog System Reset Enable
+    WDTCSR |= (1 << WDCE) | (1 << WDE);
+
+    // Set interrupt mode and set timeout value to 4s
+    WDTCSR = (1 << WDIE) | (1 << WDP3);
+
+    // Re-enable interrupts.
+    sei();
+}
+
+
 void setup() {
     // USART communication at 9600 baud.
     Serial.begin(9600);
@@ -70,7 +100,6 @@ void setup() {
     lcd.init();
     lcd.clear();
     lcd.backlight();
-    lcd.print(F("Calibrating..."));
 
     // Init card reader.
     SPI.begin();
@@ -99,12 +128,14 @@ void setup() {
     // Start from the HELLO menu.
     curr_menu = MENU_START_HELLO;
 
-    delay(2000);
+    // Setup the WDT to interrupt every 4 seconds.
+    watchdog_setup();
 }
 
 
 void loop() {
     switch(curr_menu) {
+    // START menus
     case MENU_START_HELLO:
         MENU_START_hello();
         break;
@@ -114,7 +145,11 @@ void loop() {
     case MENU_START_REGISTER:
         MENU_START_register();
         break;
+    case MENU_START_DEBUG:
+        MENU_START_debug();
+        break;
 
+    // REGISTER menus
     case MENU_REGISTER_SCAN:
         MENU_REGISTER_scan();
         break;
@@ -122,6 +157,7 @@ void loop() {
         MENU_REGISTER_pin();
         break;
 
+    // LOGIN menus
     case MENU_LOGIN_SCAN:
         MENU_LOGIN_scan();
         break;
@@ -135,6 +171,7 @@ void loop() {
         MENU_LOGIN_wrong_pin();
         break;
 
+    // LOGGED menus
     case MENU_LOGGED_HELLO:
         MENU_LOGGED_hello();
         break;
@@ -142,7 +179,12 @@ void loop() {
         MENU_LOGGED_logout();
         break;
 
+    // DEBUG menus
+    case MENU_DEBUG_WDT:
+        MENU_DEBUG_wdt();
+        break;
 
+    // ERROR menus
     case MENU_ERROR:
         MENU_error();
         break;

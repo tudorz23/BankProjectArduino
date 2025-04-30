@@ -10,18 +10,21 @@ constexpr uint8_t MENU_ERROR = 1;
 constexpr uint8_t MENU_START_HELLO = 2;
 constexpr uint8_t MENU_START_LOGIN = 3;
 constexpr uint8_t MENU_START_REGISTER = 4;
+constexpr uint8_t MENU_START_DEBUG = 5;
 
-constexpr uint8_t MENU_REGISTER_SCAN = 5;
-constexpr uint8_t MENU_REGISTER_PIN = 6;
+constexpr uint8_t MENU_REGISTER_SCAN = 6;
+constexpr uint8_t MENU_REGISTER_PIN = 7;
 
-constexpr uint8_t MENU_LOGIN_SCAN = 7;
-constexpr uint8_t MENU_LOGIN_NOT_REGISTERED = 8;
-constexpr uint8_t MENU_LOGIN_ENTER_PIN = 9;
-constexpr uint8_t MENU_LOGIN_WRONG_PIN = 10;
+constexpr uint8_t MENU_LOGIN_SCAN = 8;
+constexpr uint8_t MENU_LOGIN_NOT_REGISTERED = 9;
+constexpr uint8_t MENU_LOGIN_ENTER_PIN = 10;
+constexpr uint8_t MENU_LOGIN_WRONG_PIN = 11;
 
-constexpr uint8_t MENU_LOGGED_HELLO = 11;
-constexpr uint8_t MENU_LOGGED_LOGOUT = 12;
+constexpr uint8_t MENU_LOGGED_HELLO = 12;
+constexpr uint8_t MENU_LOGGED_LOGOUT = 13;
 
+
+constexpr uint8_t MENU_DEBUG_WDT = 100;
 
 /* GLOBAL VARIABLE */
 extern uint8_t curr_menu;
@@ -38,6 +41,8 @@ void MENU_START_hello();
 void MENU_START_login();
 
 void MENU_START_register();
+
+void MENU_START_debug();
 
 
 /*=====================================================================================*/
@@ -69,5 +74,9 @@ void MENU_LOGIN_wrong_pin();
 void MENU_LOGGED_hello();
 void MENU_LOGGED_logout();
 
+
+/*=====================================================================================*/
+/* DEBUG menus */
+void MENU_DEBUG_wdt();
 
 #endif

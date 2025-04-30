@@ -1,7 +1,7 @@
 #include "utils.h"
 
 
-/* FUNCTIONS - INTERFACING MECHANICAL COMPONENTS */
+/* HELPER FUNCTIONS */
 bool joystick_to_the_right() {
     int x_val = analogRead(JOYSTICK_VRX_PIN);
 
@@ -21,6 +21,21 @@ bool joystick_to_the_left() {
     int x_val = analogRead(JOYSTICK_VRX_PIN);
 
     if (x_val < JOY_LEFT_THRESHOLD) {
+        unsigned long curr_time = millis();
+        if (curr_time - last_joy_delay_time > BETWEEN_MENUS_DELAY) {
+            last_joy_delay_time = curr_time;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+bool joystick_to_up() {
+    int y_val = analogRead(JOYSTICK_VRY_PIN);
+
+    if (y_val < JOY_UP_THRESHOLD) {
         unsigned long curr_time = millis();
         if (curr_time - last_joy_delay_time > BETWEEN_MENUS_DELAY) {
             last_joy_delay_time = curr_time;
@@ -57,8 +72,7 @@ bool is_button_pressed(const int pin, int &last_state, int &stable_state,
 }
 
 
-/*=====================================================================================*/
-/* FUNCTIONS - PURE SOFTWARE */
+
 void extract_uid(char *buff) {
     // Read one byte (i.e. 2 hex chars) at a time.
     // Pad with one 0 to the left if the byte can be

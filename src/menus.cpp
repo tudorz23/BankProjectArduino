@@ -1,7 +1,7 @@
 #include "menus.h"
 #include "utils.h"
 
-
+/* ERROR menu */
 void MENU_error() {
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -71,10 +71,36 @@ void MENU_START_register() {
             return;
         }
 
+        if (joystick_to_the_right()) {
+            curr_menu = MENU_START_DEBUG;
+            return;
+        }
+
         // If Joystick button is pressed, access the REGISTER menu.
         if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
                               joy_button_stable_state, last_joy_debounce_time)) {
             curr_menu = MENU_REGISTER_SCAN;
+            return;
+        }
+    }
+}
+
+
+void MENU_START_debug() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Debug"));
+
+    while (true) {
+        if (joystick_to_the_left()) {
+            curr_menu = MENU_START_REGISTER;
+            return;
+        }
+
+        // If Joystick button is pressed, access the DEBUG menu.
+        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
+                              joy_button_stable_state, last_joy_debounce_time)) {
+            curr_menu = MENU_DEBUG_WDT;
             return;
         }
     }
@@ -318,6 +344,36 @@ void MENU_LOGGED_logout() {
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
             curr_menu = MENU_LOGGED_HELLO;
+            return;
+        }
+    }
+}
+
+
+
+/*=====================================================================================*/
+/* DEBUG menus */
+void MENU_DEBUG_wdt() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("WDT:"));
+
+    lcd.setCursor(0, 1);
+    lcd.print(wdt_counter);
+
+    while (true) {
+        // If the joystick button is pressed, reprint the counter.
+        if (joystick_to_up()) {
+            lcd.setCursor(0, 1);
+            lcd.print("    ");
+            lcd.setCursor(0, 1);
+            lcd.print(wdt_counter);
+        }
+
+        // If the red button is pressed, return to START menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = MENU_START_DEBUG;
             return;
         }
     }
