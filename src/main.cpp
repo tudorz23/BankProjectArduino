@@ -68,7 +68,7 @@ void setup() {
 
     // Init LCD.
     lcd.init();
-	lcd.clear();
+    lcd.clear();
     lcd.backlight();
     lcd.print(F("Calibrating..."));
 

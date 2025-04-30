@@ -26,16 +26,16 @@ struct User {
 /*=====================================================================================*/
 /* CONSTANTS */
 
-const int BETWEEN_MENUS_DELAY = 400;
-const int JOY_RIGHT_THRESHOLD = 800;
-const int JOY_LEFT_THRESHOLD = 200;
+constexpr int BETWEEN_MENUS_DELAY = 400;
+constexpr int JOY_RIGHT_THRESHOLD = 800;
+constexpr int JOY_LEFT_THRESHOLD = 200;
 
-const int DEBOUNCE_DELAY = 30;
+constexpr int DEBOUNCE_DELAY = 30;
 
-const int8_t NO_USER = -1;
-const uint8_t MAX_USERS = 6;
-const uint8_t UID_SIZE = 8;
-const uint8_t PIN_SIZE = 4;
+constexpr int8_t NO_USER = -1;
+constexpr uint8_t MAX_USERS = 6;
+constexpr uint8_t UID_SIZE = 8;
+constexpr uint8_t PIN_SIZE = 4;
 
 
 
@@ -43,28 +43,28 @@ const uint8_t PIN_SIZE = 4;
 /* COMPONENT PINS */
 
 // Card reader
-const int RFID_SDA_PIN = 8;
-const int RFID_RST_PIN = 7;
+constexpr int RFID_SDA_PIN = 8;
+constexpr int RFID_RST_PIN = 7;
 
 // Joystick
-const int JOYSTICK_VRX_PIN = A0;
-const int JOYSTICK_VRY_PIN = A1;
-const int JOYSTICK_SW_PIN = A2;
+constexpr int JOYSTICK_VRX_PIN = A0;
+constexpr int JOYSTICK_VRY_PIN = A1;
+constexpr int JOYSTICK_SW_PIN = A2;
 
 // TTP229 keyboard
-const int TTP_SCL_PIN = 4; // The pin number of the clock pin.
-const int TTP_SDO_PIN = 2; // The pin number of the data pin.
+constexpr int TTP_SCL_PIN = 4; // The pin number of the clock pin.
+constexpr int TTP_SDO_PIN = 2; // The pin number of the data pin.
 
 // RGB led
-const int LED_R_PIN = 10;
-const int LED_G_PIN = 9;
-const int LED_B_PIN = 6;
+constexpr int LED_R_PIN = 10;
+constexpr int LED_G_PIN = 9;
+constexpr int LED_B_PIN = 6;
 
 // Buzzer
-const int BUZZER_PIN = 3;
+constexpr int BUZZER_PIN = 3;
 
 // Red button
-const int RED_BUTTON_PIN = 5;
+constexpr int RED_BUTTON_PIN = 5;
 
 
 
@@ -106,7 +106,7 @@ bool is_button_pressed(const int pin, int &last_state, int &stable_state,
                        unsigned long &last_debounce_time);
 
 
-                 
+
 /*=====================================================================================*/
 /* FUNCTIONS - PURE SOFTWARE */
 
