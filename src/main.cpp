@@ -48,6 +48,8 @@ int red_button_stable_state = HIGH;
 // To be incremented by the WDT ISR every 4 seconds.
 volatile uint16_t wdt_counter = 0;
 
+bool friendships[MAX_USERS][MAX_USERS] = { false };
+
 
 void init_database() {
     names[0] = "Lewis Hamilton";

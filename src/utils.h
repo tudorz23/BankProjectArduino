@@ -9,6 +9,17 @@
 // #define DEBUG
 
 
+constexpr uint8_t MAX_NOTIFS = 4;
+
+struct Notification {
+    uint8_t type;
+
+    uint8_t from_who;
+
+    uint16_t sum;
+};
+
+
 /* USER STRUCTURE */
 struct User {
     // Sum in the checking account
@@ -22,6 +33,10 @@ struct User {
 
     // PIN code
     uint16_t pin;
+
+    Notification notifications[MAX_NOTIFS];
+
+    uint8_t notif_cnt;
 };
 
 
@@ -92,6 +107,8 @@ extern int last_red_button_state;
 extern int red_button_stable_state;
 
 extern volatile uint16_t wdt_counter;
+
+extern bool friendships[MAX_USERS][MAX_USERS];
 
 
 /*=====================================================================================*/
