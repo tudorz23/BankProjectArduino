@@ -29,6 +29,8 @@ uint8_t registered_users = 0;
 // The menu currently running.
 uint8_t curr_menu = NO_MENU;
 
+EnterSumType enter_sum_type = NO_ENTER;
+
 // The index of the currently logged-in user (initially nobody).
 int8_t logged_user = NO_USER;
 
@@ -194,10 +196,28 @@ void loop() {
     case MENU_MAIN_ACC_SUM:
         MENU_MAIN_ACC_sum();
         break;
+    case MENU_MAIN_ACC_ADD:
+        MENU_MAIN_ACC_add();
+        break;
     
     // ECO_ACC menus
     case MENU_ECO_ACC_SUM:
         MENU_ECO_ACC_sum();
+        break;
+
+    // ENTER_SUM menu
+    case MENU_ENTER_SUM:
+        MENU_ENTER_sum();
+        break;
+
+    // DONE menu
+    case MENU_DONE:
+        MENU_DONE_done();
+        break;
+
+    // NO_FUNDS menu
+    case MENU_NO_FUNDS:
+        MENU_NO_funds();
         break;
 
     // DEBUG menus

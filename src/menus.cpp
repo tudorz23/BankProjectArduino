@@ -188,10 +188,13 @@ void MENU_REGISTER_pin() {
     lcd.setCursor(0, 0);
     lcd.print(F("Enter PIN:"));
 
-    uint16_t pin = get_pin_input();
+    // For safety reasons, read to a uint32_t
+    uint32_t pin_big = read_number_input(PIN);
+    uint16_t pin = pin_big % 10000;
 
     if (pin == 0) {
         // Red button was pressed.
+        logged_user = NO_USER;
         curr_menu = MENU_REGISTER_SCAN;
         return;
     }
@@ -292,7 +295,9 @@ void MENU_LOGIN_enter_pin() {
     lcd.setCursor(0, 0);
     lcd.print(F("Enter PIN:"));
 
-    uint16_t pin = get_pin_input();
+    // For safety reasons, read to a uint32_t
+    uint32_t pin_big = read_number_input(PIN);
+    uint16_t pin = pin_big % 10000;
 
     if (pin == 0) {
         // Red button was pressed.
@@ -449,6 +454,40 @@ void MENU_MAIN_ACC_sum() {
     lcd.print(users[logged_user].checking_sum);
 
     while (true) {
+        if (joystick_to_the_right()) {
+            curr_menu = MENU_MAIN_ACC_ADD;
+            return;
+        }
+
+        // If red button is pressed, go to LOGGED_MAIN_ACC menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = MENU_LOGGED_MAIN_ACC;
+            return;
+        }
+    }
+}
+
+
+void MENU_MAIN_ACC_add() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Add cash"));
+
+    while (true) {
+        if (joystick_to_the_left()) {
+            curr_menu = MENU_MAIN_ACC_SUM;
+            return;
+        }
+
+        // If the joystick button is pressed, go to ENTER_SUM.
+        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
+                              joy_button_stable_state, last_joy_debounce_time)) {
+            enter_sum_type = ADD_CASH;
+            curr_menu = MENU_ENTER_SUM;
+            return;
+        }
+
         // If red button is pressed, go to LOGGED_MAIN_ACC menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
@@ -462,8 +501,6 @@ void MENU_MAIN_ACC_sum() {
 /*=====================================================================================*/
 /* ECO_ACC menus */
 void MENU_ECO_ACC_sum() {
-    // TODO: Compute new eco sum after interest.
-
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Eco acc sum:"));
@@ -478,6 +515,103 @@ void MENU_ECO_ACC_sum() {
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
             curr_menu = MENU_LOGGED_ECO_ACC;
+            return;
+        }
+    }
+}
+
+
+/*=====================================================================================*/
+/* ENTER_SUM menu */
+void MENU_ENTER_sum() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Enter sum:"));
+
+    uint32_t sum = read_number_input(SUM);
+
+    if (sum == 0) {
+        // Red button was pressed.
+        if (enter_sum_type == ADD_CASH) curr_menu = MENU_MAIN_ACC_ADD;
+        else if (enter_sum_type == MAIN_TO_ECO) curr_menu = MENU_MAIN_ACC_TO_ECO;
+        else if (enter_sum_type == ECO_TO_MAIN) curr_menu = MENU_ECO_ACC_TO_MAIN;
+        else if (enter_sum_type == PAY) curr_menu = MENU_MAIN_ACC_PAY;
+
+        enter_sum_type = NO_ENTER;
+        return;
+    }
+
+    if (enter_sum_type == ADD_CASH) {
+        users[logged_user].checking_sum += sum;
+        curr_menu = MENU_DONE;
+    } else if (enter_sum_type == MAIN_TO_ECO) {
+        if (users[logged_user].checking_sum >= sum) {
+            users[logged_user].checking_sum -= sum;
+            users[logged_user].economy_sum += sum;
+            curr_menu = MENU_DONE;
+        } else {
+            curr_menu = MENU_NO_FUNDS;
+        }
+    } else if (enter_sum_type == ECO_TO_MAIN) {
+        if (users[logged_user].economy_sum >= (float)sum) {
+            users[logged_user].economy_sum -= sum;
+            users[logged_user].checking_sum += sum;
+            curr_menu = MENU_DONE;
+        } else {
+            curr_menu = MENU_NO_FUNDS;
+        }
+    } else {
+        // enter_sum_type == PAY
+        if (users[logged_user].checking_sum >= sum) {
+            users[logged_user].checking_sum -= sum;
+            curr_menu = MENU_DONE;
+        } else {
+            curr_menu = MENU_NO_FUNDS;
+        }
+    }
+}
+
+
+/*=====================================================================================*/
+/* DONE menu */
+void MENU_DONE_done() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Done"));
+
+    while (true) {
+        // If red button is pressed, go back to previous menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            if (enter_sum_type == ADD_CASH) curr_menu = MENU_MAIN_ACC_ADD;
+            else if (enter_sum_type == MAIN_TO_ECO) curr_menu = MENU_MAIN_ACC_TO_ECO;
+            else if (enter_sum_type == ECO_TO_MAIN) curr_menu = MENU_ECO_ACC_TO_MAIN;
+            else if (enter_sum_type == PAY) curr_menu = MENU_MAIN_ACC_PAY;
+
+            enter_sum_type = NO_ENTER;
+            return;
+        }
+    }
+}
+
+
+/*=====================================================================================*/
+/* NO_FUNDS menu */
+void MENU_NO_funds() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("No funds"));
+
+    while (true) {
+        // If red button is pressed, go back to previous menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            if (enter_sum_type == ADD_CASH) curr_menu = MENU_MAIN_ACC_ADD;
+            else if (enter_sum_type == MAIN_TO_ECO) curr_menu = MENU_MAIN_ACC_TO_ECO;
+            else if (enter_sum_type == ECO_TO_MAIN) curr_menu = MENU_ECO_ACC_TO_MAIN;
+            else if (enter_sum_type == PAY) curr_menu = MENU_MAIN_ACC_PAY;
+
+            enter_sum_type = NO_ENTER;
             return;
         }
     }

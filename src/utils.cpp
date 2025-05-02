@@ -72,7 +72,6 @@ bool is_button_pressed(const int pin, int &last_state, int &stable_state,
 }
 
 
-
 void extract_uid(char *buff) {
     // Read one byte (i.e. 2 hex chars) at a time.
     // Pad with one 0 to the left if the byte can be
@@ -97,10 +96,12 @@ int8_t get_user_idx_from_uid(char *uid) {
 }
 
 
-uint16_t get_pin_input() {
-    uint16_t pin = 0;
-    uint8_t read_digit = 0;
+uint32_t read_number_input(ReadInputType type) {
+    // If a PIN is read, limit it to 4 digits, if a sum is read, limit it to MAX_SUM_DIGITS.
+    uint8_t max_digits = type == PIN ? PIN_SIZE : MAX_SUM_DIGITS;
 
+    uint32_t number = 0;
+    uint8_t read_key = 0;
     uint8_t idx = 0;
     uint8_t last_key = 0;  // Keep track of last key pressed
 
@@ -111,53 +112,59 @@ uint16_t get_pin_input() {
             return 0;
         }
 
-        // If joystick button is pressed and full pin is introduced, return the pin.
-        if (idx == PIN_SIZE && is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
+        // If joystick button is pressed.
+        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
                               joy_button_stable_state, last_joy_debounce_time)) {
-            return pin;
+            if (type == PIN && idx == PIN_SIZE) {
+                return number;
+            }
+
+            if (type == SUM && idx > 0) {
+                return number;
+            }
         }
 
         // Read current key (non-blocking).
-        read_digit = ttp229.GetKey16();
+        read_key = ttp229.GetKey16();
 
         // Only react if no key was previously pressed (to avoid accidental multiple sampling).
-        if (read_digit != 0 && last_key == 0) {
+        if (read_key != 0 && last_key == 0) {
             // '0' key
-            if (read_digit == 10) {
-                if (idx != 0 && idx < PIN_SIZE) {
-                    pin = pin * 10;
+            if (read_key == 10) {
+                if (idx != 0 && idx < max_digits) {
+                    number = number * 10;
                     idx++;
                 }
             }
 
             // Backspace
-            else if (read_digit == 11) {
+            else if (read_key == 11) {
                 // Can't delete if there is no digit.
                 if (idx != 0) {
-                    pin = pin / 10;
+                    number = number / 10;
                     idx--;
                 }
             }
 
             // Normal digits
-            else if (read_digit <= 9) { 
-                if (idx < PIN_SIZE) {
-                    pin = pin * 10 + read_digit;
+            else if (read_key <= 9) { 
+                if (idx < max_digits) {
+                    number = number * 10 + read_key;
                     idx++;
                 }
             }
 
-            // Print intermediary pin
+            // Print intermediary number
             lcd.setCursor(0, 1);
             lcd.print(BLANK); // clear
             lcd.setCursor(0, 1);
-            if (pin != 0) {
-                lcd.print(pin);
+            if (number != 0) {
+                lcd.print(number);
             }
         }
 
         // Update last_key
-        last_key = read_digit;
+        last_key = read_key;
     }
 }
 

@@ -3,6 +3,17 @@
 
 #include "Arduino.h"
 
+
+enum EnterSumType {
+    NO_ENTER, ADD_CASH, MAIN_TO_ECO, ECO_TO_MAIN, PAY
+};
+
+
+/* GLOBAL VARIABLE */
+extern uint8_t curr_menu;
+extern EnterSumType enter_sum_type;
+
+
 /* MENU CODES */
 constexpr uint8_t NO_MENU = 0;
 constexpr uint8_t MENU_ERROR = 1;
@@ -32,17 +43,28 @@ constexpr uint8_t MENU_LOGGED_LOGOUT = 49;
 
 // MAIN_ACC menus
 constexpr uint8_t MENU_MAIN_ACC_SUM = 50;
+constexpr uint8_t MENU_MAIN_ACC_ADD = 51;
+constexpr uint8_t MENU_MAIN_ACC_TO_ECO = 52;
+constexpr uint8_t MENU_MAIN_ACC_PAY = 53;
 
 // ECO_ACC menus
 constexpr uint8_t MENU_ECO_ACC_SUM = 60;
+constexpr uint8_t MENU_ECO_ACC_TO_MAIN = 61;
+
+// ENTER_SUM menu
+constexpr uint8_t MENU_ENTER_SUM = 100;
+
+// DONE menu
+constexpr uint8_t MENU_DONE = 110;
+
+// NO_FUNDS menu
+constexpr uint8_t MENU_NO_FUNDS = 120;
 
 // DEBUG menus
-constexpr uint8_t MENU_DEBUG_WDT = 100;
-
-/* GLOBAL VARIABLE */
-extern uint8_t curr_menu;
+constexpr uint8_t MENU_DEBUG_WDT = 130;
 
 
+/*=====================================================================================*/
 /* ERROR menu */
 void MENU_error();
 
@@ -95,12 +117,27 @@ void MENU_LOGGED_logout();
 /*=====================================================================================*/
 /* MAIN_ACC menus */
 void MENU_MAIN_ACC_sum();
+void MENU_MAIN_ACC_add();
 
 
 /*=====================================================================================*/
 /* ECO_ACC menus */
 void MENU_ECO_ACC_sum();
 
+
+/*=====================================================================================*/
+/* ENTER_SUM menu */
+void MENU_ENTER_sum();
+
+
+/*=====================================================================================*/
+/* DONE menu */
+void MENU_DONE_done(); // can only be reached via MENU_ENTER_SUM
+
+
+/*=====================================================================================*/
+/* NO_FUNDS menu */
+void MENU_NO_funds(); // can only be reached via MENU_ENTER_SUM
 
 /*=====================================================================================*/
 /* DEBUG menus */
