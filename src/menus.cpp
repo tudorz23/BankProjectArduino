@@ -480,10 +480,78 @@ void MENU_MAIN_ACC_add() {
             return;
         }
 
+        if (joystick_to_the_right()) {
+            curr_menu = MENU_MAIN_ACC_PAY;
+            return;
+        }
+
         // If the joystick button is pressed, go to ENTER_SUM.
         if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
                               joy_button_stable_state, last_joy_debounce_time)) {
-            enter_sum_type = ADD_CASH;
+            enter_sum_type = EnterSumType::ADD_CASH;
+            curr_menu = MENU_ENTER_SUM;
+            return;
+        }
+
+        // If red button is pressed, go to LOGGED_MAIN_ACC menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = MENU_LOGGED_MAIN_ACC;
+            return;
+        }
+    }
+}
+
+
+void MENU_MAIN_ACC_pay() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Pay"));
+
+    while (true) {
+        if (joystick_to_the_left()) {
+            curr_menu = MENU_MAIN_ACC_ADD;
+            return;
+        }
+
+        if (joystick_to_the_right()) {
+            curr_menu = MENU_MAIN_ACC_TO_ECO;
+            return;
+        }
+
+        // If the joystick button is pressed, go to ENTER_SUM.
+        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
+                              joy_button_stable_state, last_joy_debounce_time)) {
+            enter_sum_type = EnterSumType::PAY;
+            curr_menu = MENU_ENTER_SUM;
+            return;
+        }
+
+        // If red button is pressed, go to LOGGED_MAIN_ACC menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = MENU_LOGGED_MAIN_ACC;
+            return;
+        }
+    }
+}
+
+
+void MENU_MAIN_ACC_to_eco() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("To Eco"));
+
+    while (true) {
+        if (joystick_to_the_left()) {
+            curr_menu = MENU_MAIN_ACC_PAY;
+            return;
+        }
+
+        // If the joystick button is pressed, go to ENTER_SUM.
+        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
+                              joy_button_stable_state, last_joy_debounce_time)) {
+            enter_sum_type = EnterSumType::MAIN_TO_ECO;
             curr_menu = MENU_ENTER_SUM;
             return;
         }
@@ -553,6 +621,8 @@ void MENU_ENTER_sum() {
             curr_menu = MENU_NO_FUNDS;
         }
     } else if (enter_sum_type == ECO_TO_MAIN) {
+        apply_interest(users[logged_user]);
+        
         if (users[logged_user].economy_sum >= (float)sum) {
             users[logged_user].economy_sum -= sum;
             users[logged_user].checking_sum += sum;
@@ -583,10 +653,10 @@ void MENU_DONE_done() {
         // If red button is pressed, go back to previous menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            if (enter_sum_type == ADD_CASH) curr_menu = MENU_MAIN_ACC_ADD;
-            else if (enter_sum_type == MAIN_TO_ECO) curr_menu = MENU_MAIN_ACC_TO_ECO;
-            else if (enter_sum_type == ECO_TO_MAIN) curr_menu = MENU_ECO_ACC_TO_MAIN;
-            else if (enter_sum_type == PAY) curr_menu = MENU_MAIN_ACC_PAY;
+            if (enter_sum_type == ADD_CASH) curr_menu = MENU_MAIN_ACC_SUM;
+            else if (enter_sum_type == MAIN_TO_ECO) curr_menu = MENU_MAIN_ACC_SUM;
+            else if (enter_sum_type == ECO_TO_MAIN) curr_menu = MENU_ECO_ACC_SUM;
+            else if (enter_sum_type == PAY) curr_menu = MENU_MAIN_ACC_SUM;
 
             enter_sum_type = NO_ENTER;
             return;
@@ -606,10 +676,10 @@ void MENU_NO_funds() {
         // If red button is pressed, go back to previous menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            if (enter_sum_type == ADD_CASH) curr_menu = MENU_MAIN_ACC_ADD;
-            else if (enter_sum_type == MAIN_TO_ECO) curr_menu = MENU_MAIN_ACC_TO_ECO;
-            else if (enter_sum_type == ECO_TO_MAIN) curr_menu = MENU_ECO_ACC_TO_MAIN;
-            else if (enter_sum_type == PAY) curr_menu = MENU_MAIN_ACC_PAY;
+            if (enter_sum_type == ADD_CASH) curr_menu = MENU_MAIN_ACC_SUM;
+            else if (enter_sum_type == MAIN_TO_ECO) curr_menu = MENU_MAIN_ACC_SUM;
+            else if (enter_sum_type == ECO_TO_MAIN) curr_menu = MENU_ECO_ACC_SUM;
+            else if (enter_sum_type == PAY) curr_menu = MENU_MAIN_ACC_SUM;
 
             enter_sum_type = NO_ENTER;
             return;

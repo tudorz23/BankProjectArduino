@@ -44,8 +44,8 @@ constexpr uint8_t MENU_LOGGED_LOGOUT = 49;
 // MAIN_ACC menus
 constexpr uint8_t MENU_MAIN_ACC_SUM = 50;
 constexpr uint8_t MENU_MAIN_ACC_ADD = 51;
-constexpr uint8_t MENU_MAIN_ACC_TO_ECO = 52;
-constexpr uint8_t MENU_MAIN_ACC_PAY = 53;
+constexpr uint8_t MENU_MAIN_ACC_PAY = 52;
+constexpr uint8_t MENU_MAIN_ACC_TO_ECO = 53;
 
 // ECO_ACC menus
 constexpr uint8_t MENU_ECO_ACC_SUM = 60;
@@ -118,6 +118,8 @@ void MENU_LOGGED_logout();
 /* MAIN_ACC menus */
 void MENU_MAIN_ACC_sum();
 void MENU_MAIN_ACC_add();
+void MENU_MAIN_ACC_pay();
+void MENU_MAIN_ACC_to_eco();
 
 
 /*=====================================================================================*/

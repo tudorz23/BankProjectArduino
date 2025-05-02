@@ -91,7 +91,7 @@ constexpr uint8_t MAX_SUM_DIGITS = 7;
 constexpr uint8_t INTEREST_RATE = 2;
 constexpr uint8_t APPLY_INTEREST_INTERVAL = 15;
 
-constexpr char BLANK[] = "      ";
+constexpr char BLANK[] = "       ";
 
 
 /*=====================================================================================*/
