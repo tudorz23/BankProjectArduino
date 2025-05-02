@@ -27,10 +27,10 @@ const char *uids[MAX_USERS];
 uint8_t registered_users = 0;
 
 // The menu currently running.
-uint8_t curr_menu = NO_MENU;
+Menu curr_menu = Menu::NO_MENU;
 
 // Indicates to the ENTER_MENU what action to perform.
-EnterSumType enter_sum_type = EnterSumType::NO_ENTER;
+EnterSum enter_sum_type = EnterSum::NO_ENTER;
 
 // The index of the currently logged-in user (initially nobody).
 int8_t logged_user = NO_USER;
@@ -131,7 +131,7 @@ void setup() {
     init_database();
 
     // Start from the HELLO menu.
-    curr_menu = MENU_START_HELLO;
+    curr_menu = Menu::START_HELLO;
 
     // Setup the WDT.
     watchdog_setup();
@@ -141,103 +141,103 @@ void setup() {
 void loop() {
     switch(curr_menu) {
     // START menus
-    case MENU_START_HELLO:
+    case Menu::START_HELLO:
         MENU_START_hello();
         break;
-    case MENU_START_LOGIN:
+    case Menu::START_LOGIN:
         MENU_START_login();
         break;
-    case MENU_START_REGISTER:
+    case Menu::START_REGISTER:
         MENU_START_register();
         break;
-    case MENU_START_DEBUG:
+    case Menu::START_DEBUG:
         MENU_START_debug();
         break;
 
     // REGISTER menus
-    case MENU_REGISTER_SCAN:
+    case Menu::REGISTER_SCAN:
         MENU_REGISTER_scan();
         break;
-    case MENU_REGISTER_ALREADY_REG:
+    case Menu::REGISTER_ALREADY_REG:
         MENU_REGISTER_already_reg();
         break;
-    case MENU_REGISTER_PIN:
+    case Menu::REGISTER_PIN:
         MENU_REGISTER_pin();
         break;
 
     // LOGIN menus
-    case MENU_LOGIN_SCAN:
+    case Menu::LOGIN_SCAN:
         MENU_LOGIN_scan();
         break;
-    case MENU_LOGIN_NOT_REGISTERED:
+    case Menu::LOGIN_NOT_REGISTERED:
         MENU_LOGIN_not_registered();
         break;
-    case MENU_LOGIN_ENTER_PIN:
+    case Menu::LOGIN_ENTER_PIN:
         MENU_LOGIN_enter_pin();
         break;
-    case MENU_LOGIN_WRONG_PIN:
+    case Menu::LOGIN_WRONG_PIN:
         MENU_LOGIN_wrong_pin();
         break;
 
     // LOGGED menus
-    case MENU_LOGGED_HELLO:
+    case Menu::LOGGED_HELLO:
         MENU_LOGGED_hello();
         break;
-    case MENU_LOGGED_MAIN_ACC:
+    case Menu::LOGGED_MAIN_ACC:
         MENU_LOGGED_main_acc();
         break;
-    case MENU_LOGGED_ECO_ACC:
+    case Menu::LOGGED_ECO_ACC:
         MENU_LOGGED_eco_acc();
         break;
-    case MENU_LOGGED_LOGOUT:
+    case Menu::LOGGED_LOGOUT:
         MENU_LOGGED_logout();
         break;
 
     // MAIN_ACC menus
-    case MENU_MAIN_ACC_SUM:
+    case Menu::MAIN_ACC_SUM:
         MENU_MAIN_ACC_sum();
         break;
-    case MENU_MAIN_ACC_ADD:
+    case Menu::MAIN_ACC_ADD:
         MENU_MAIN_ACC_add();
         break;
-    case MENU_MAIN_ACC_PAY:
+    case Menu::MAIN_ACC_PAY:
         MENU_MAIN_ACC_pay();
         break;
-    case MENU_MAIN_ACC_TO_ECO:
+    case Menu::MAIN_ACC_TO_ECO:
         MENU_MAIN_ACC_to_eco();
         break;
     
     // ECO_ACC menus
-    case MENU_ECO_ACC_SUM:
+    case Menu::ECO_ACC_SUM:
         MENU_ECO_ACC_sum();
         break;
 
     // ENTER_SUM menu
-    case MENU_ENTER_SUM:
+    case Menu::ENTER_SUM:
         MENU_ENTER_sum();
         break;
 
     // DONE menu
-    case MENU_DONE:
+    case Menu::DONE:
         MENU_DONE_done();
         break;
 
     // NO_FUNDS menu
-    case MENU_NO_FUNDS:
+    case Menu::NO_FUNDS:
         MENU_NO_funds();
         break;
 
     // DEBUG menus
-    case MENU_DEBUG_WDT:
+    case Menu::DEBUG_WDT:
         MENU_DEBUG_wdt();
         break;
 
     // ERROR menus
-    case MENU_ERROR:
+    case Menu::ERROR:
         MENU_error();
         break;
     default:
-        curr_menu = MENU_ERROR;
+        curr_menu = Menu::ERROR;
         break;
     }
 }

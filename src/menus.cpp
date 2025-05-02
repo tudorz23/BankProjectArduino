@@ -10,7 +10,7 @@ void MENU_error() {
     while (true) {
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = MENU_START_HELLO;
+            curr_menu = Menu::START_HELLO;
             return;
         }
     }
@@ -27,7 +27,7 @@ void MENU_START_hello() {
 
     while (true) {
         if (joystick_to_the_right()) {
-            curr_menu = MENU_START_LOGIN;
+            curr_menu = Menu::START_LOGIN;
             return;
         }
     }
@@ -41,19 +41,19 @@ void MENU_START_login() {
 
     while (true) {
         if (joystick_to_the_left()) {
-            curr_menu = MENU_START_HELLO;
+            curr_menu = Menu::START_HELLO;
             return;
         }
 
         if (joystick_to_the_right()) {
-            curr_menu = MENU_START_REGISTER;
+            curr_menu = Menu::START_REGISTER;
             return;
         }
 
         // If Joystick button is pressed, access the LOGIN menu.
         if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
                               joy_button_stable_state, last_joy_debounce_time)) {
-            curr_menu = MENU_LOGIN_SCAN;
+            curr_menu = Menu::LOGIN_SCAN;
             return;
         }
     }
@@ -67,19 +67,19 @@ void MENU_START_register() {
 
     while (true) {
         if (joystick_to_the_left()) {
-            curr_menu = MENU_START_LOGIN;
+            curr_menu = Menu::START_LOGIN;
             return;
         }
 
         if (joystick_to_the_right()) {
-            curr_menu = MENU_START_DEBUG;
+            curr_menu = Menu::START_DEBUG;
             return;
         }
 
         // If Joystick button is pressed, access the REGISTER menu.
         if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
                               joy_button_stable_state, last_joy_debounce_time)) {
-            curr_menu = MENU_REGISTER_SCAN;
+            curr_menu = Menu::REGISTER_SCAN;
             return;
         }
     }
@@ -93,14 +93,14 @@ void MENU_START_debug() {
 
     while (true) {
         if (joystick_to_the_left()) {
-            curr_menu = MENU_START_REGISTER;
+            curr_menu = Menu::START_REGISTER;
             return;
         }
 
         // If Joystick button is pressed, access the DEBUG menu.
         if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
                               joy_button_stable_state, last_joy_debounce_time)) {
-            curr_menu = MENU_DEBUG_WDT;
+            curr_menu = Menu::DEBUG_WDT;
             return;
         }
     }
@@ -119,7 +119,7 @@ void MENU_REGISTER_scan() {
         // If red button is pressed, abort scanning and go back to START menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = MENU_START_REGISTER;
+            curr_menu = Menu::START_REGISTER;
             return;
         }
 
@@ -142,14 +142,14 @@ void MENU_REGISTER_scan() {
 
         logged_user = get_user_idx_from_uid(uid);
         if (logged_user == NO_USER) {
-            curr_menu = MENU_ERROR;
+            curr_menu = Menu::ERROR;
             return;
         }
 
         if (is_user_registered(logged_user)) {
             // User already registered.
             logged_user = NO_USER;
-            curr_menu = MENU_REGISTER_ALREADY_REG;
+            curr_menu = Menu::REGISTER_ALREADY_REG;
             return;
         }
 
@@ -159,7 +159,7 @@ void MENU_REGISTER_scan() {
         Serial.println();
         #endif
 
-        curr_menu = MENU_REGISTER_PIN;
+        curr_menu = Menu::REGISTER_PIN;
         return;
     }
 }
@@ -176,7 +176,7 @@ void MENU_REGISTER_already_reg() {
         // If red button is pressed, go back to REGISTER SCAN menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = MENU_REGISTER_SCAN;
+            curr_menu = Menu::REGISTER_SCAN;
             return;
         }
     }
@@ -189,13 +189,13 @@ void MENU_REGISTER_pin() {
     lcd.print(F("Enter PIN:"));
 
     // For safety reasons, read to a uint32_t
-    uint32_t pin_big = read_number_input(PIN);
+    uint32_t pin_big = read_number_input(ReadInputType::PIN);
     uint16_t pin = pin_big % 10000;
 
     if (pin == 0) {
         // Red button was pressed.
         logged_user = NO_USER;
-        curr_menu = MENU_REGISTER_SCAN;
+        curr_menu = Menu::REGISTER_SCAN;
         return;
     }
 
@@ -212,7 +212,7 @@ void MENU_REGISTER_pin() {
     Serial.println();
     #endif
 
-    curr_menu = MENU_LOGGED_HELLO;
+    curr_menu = Menu::LOGGED_HELLO;
 }
 
 
@@ -228,7 +228,7 @@ void MENU_LOGIN_scan() {
         // If red button is pressed, abort scanning and go back to START menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = MENU_START_LOGIN;
+            curr_menu = Menu::START_LOGIN;
             return;
         }
 
@@ -251,7 +251,7 @@ void MENU_LOGIN_scan() {
 
         logged_user = get_user_idx_from_uid(uid);
         if (logged_user == NO_USER) {
-            curr_menu = MENU_ERROR;
+            curr_menu = Menu::ERROR;
             return;
         }
 
@@ -264,11 +264,11 @@ void MENU_LOGIN_scan() {
         // Check if the user is registered.
         if (!is_user_registered(logged_user)) {
             logged_user = NO_USER;
-            curr_menu = MENU_LOGIN_NOT_REGISTERED;
+            curr_menu = Menu::LOGIN_NOT_REGISTERED;
             return;
         }
 
-        curr_menu = MENU_LOGIN_ENTER_PIN;
+        curr_menu = Menu::LOGIN_ENTER_PIN;
         return;
     }
 }
@@ -283,7 +283,7 @@ void MENU_LOGIN_not_registered() {
         // If red button is pressed, go back to LOGIN_SCAN menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = MENU_LOGIN_SCAN;
+            curr_menu = Menu::LOGIN_SCAN;
             return;
         }
     }
@@ -296,23 +296,23 @@ void MENU_LOGIN_enter_pin() {
     lcd.print(F("Enter PIN:"));
 
     // For safety reasons, read to a uint32_t
-    uint32_t pin_big = read_number_input(PIN);
+    uint32_t pin_big = read_number_input(ReadInputType::PIN);
     uint16_t pin = pin_big % 10000;
 
     if (pin == 0) {
         // Red button was pressed.
         logged_user = NO_USER;
-        curr_menu = MENU_LOGIN_SCAN;
+        curr_menu = Menu::LOGIN_SCAN;
         return;
     }
 
     // Check if the PIN is correct.
     if (pin != users[logged_user].pin) {
-        curr_menu = MENU_LOGIN_WRONG_PIN;
+        curr_menu = Menu::LOGIN_WRONG_PIN;
         return;
     }
 
-    curr_menu = MENU_LOGGED_HELLO;
+    curr_menu = Menu::LOGGED_HELLO;
 }
 
 
@@ -325,7 +325,7 @@ void MENU_LOGIN_wrong_pin() {
         // If red button is pressed, go back to LOGIN_ENTER_PIN menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = MENU_LOGIN_ENTER_PIN;
+            curr_menu = Menu::LOGIN_ENTER_PIN;
             return;
         }
     }
@@ -345,14 +345,14 @@ void MENU_LOGGED_hello() {
 
     while (true) {
         if (joystick_to_the_right()) {
-            curr_menu = MENU_LOGGED_MAIN_ACC;
+            curr_menu = Menu::LOGGED_MAIN_ACC;
             return;
         }
 
         // If red button is pressed, go to LOGOUT menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = MENU_LOGGED_LOGOUT;
+            curr_menu = Menu::LOGGED_LOGOUT;
             return;
         }
     }
@@ -366,26 +366,26 @@ void MENU_LOGGED_main_acc() {
 
     while (true) {
         if (joystick_to_the_left()) {
-            curr_menu = MENU_LOGGED_HELLO;
+            curr_menu = Menu::LOGGED_HELLO;
             return;
         }
 
         if (joystick_to_the_right()) {
-            curr_menu = MENU_LOGGED_ECO_ACC;
+            curr_menu = Menu::LOGGED_ECO_ACC;
             return;
         }
 
         // If Joystick button is pressed, access the MAIN_ACC menu.
         if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
                               joy_button_stable_state, last_joy_debounce_time)) {
-            curr_menu = MENU_MAIN_ACC_SUM;
+            curr_menu = Menu::MAIN_ACC_SUM;
             return;
         }
 
         // If red button is pressed, go to LOGOUT menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = MENU_LOGGED_LOGOUT;
+            curr_menu = Menu::LOGGED_LOGOUT;
             return;
         }
     }
@@ -399,21 +399,21 @@ void MENU_LOGGED_eco_acc() {
 
     while (true) {
         if (joystick_to_the_left()) {
-            curr_menu = MENU_LOGGED_MAIN_ACC;
+            curr_menu = Menu::LOGGED_MAIN_ACC;
             return;
         }
 
         // If Joystick button is pressed, access the ECO_ACC menu.
         if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
                               joy_button_stable_state, last_joy_debounce_time)) {
-            curr_menu = MENU_ECO_ACC_SUM;
+            curr_menu = Menu::ECO_ACC_SUM;
             return;
         }
 
         // If red button is pressed, go to LOGOUT menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = MENU_LOGGED_LOGOUT;
+            curr_menu = Menu::LOGGED_LOGOUT;
             return;
         }
     }
@@ -430,14 +430,14 @@ void MENU_LOGGED_logout() {
         if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
                               joy_button_stable_state, last_joy_debounce_time)) {
             logged_user = NO_USER;
-            curr_menu = MENU_START_HELLO;
+            curr_menu = Menu::START_HELLO;
             return;
         }
 
         // If the red button is pressed, cancel the logout.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = MENU_LOGGED_HELLO;
+            curr_menu = Menu::LOGGED_HELLO;
             return;
         }
     }
@@ -455,14 +455,14 @@ void MENU_MAIN_ACC_sum() {
 
     while (true) {
         if (joystick_to_the_right()) {
-            curr_menu = MENU_MAIN_ACC_ADD;
+            curr_menu = Menu::MAIN_ACC_ADD;
             return;
         }
 
         // If red button is pressed, go to LOGGED_MAIN_ACC menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = MENU_LOGGED_MAIN_ACC;
+            curr_menu = Menu::LOGGED_MAIN_ACC;
             return;
         }
     }
@@ -476,27 +476,27 @@ void MENU_MAIN_ACC_add() {
 
     while (true) {
         if (joystick_to_the_left()) {
-            curr_menu = MENU_MAIN_ACC_SUM;
+            curr_menu = Menu::MAIN_ACC_SUM;
             return;
         }
 
         if (joystick_to_the_right()) {
-            curr_menu = MENU_MAIN_ACC_PAY;
+            curr_menu = Menu::MAIN_ACC_PAY;
             return;
         }
 
         // If the joystick button is pressed, go to ENTER_SUM.
         if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
                               joy_button_stable_state, last_joy_debounce_time)) {
-            enter_sum_type = EnterSumType::ADD_CASH;
-            curr_menu = MENU_ENTER_SUM;
+            enter_sum_type = EnterSum::ADD_CASH;
+            curr_menu = Menu::ENTER_SUM;
             return;
         }
 
         // If red button is pressed, go to LOGGED_MAIN_ACC menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = MENU_LOGGED_MAIN_ACC;
+            curr_menu = Menu::LOGGED_MAIN_ACC;
             return;
         }
     }
@@ -510,27 +510,27 @@ void MENU_MAIN_ACC_pay() {
 
     while (true) {
         if (joystick_to_the_left()) {
-            curr_menu = MENU_MAIN_ACC_ADD;
+            curr_menu = Menu::MAIN_ACC_ADD;
             return;
         }
 
         if (joystick_to_the_right()) {
-            curr_menu = MENU_MAIN_ACC_TO_ECO;
+            curr_menu = Menu::MAIN_ACC_TO_ECO;
             return;
         }
 
         // If the joystick button is pressed, go to ENTER_SUM.
         if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
                               joy_button_stable_state, last_joy_debounce_time)) {
-            enter_sum_type = EnterSumType::PAY;
-            curr_menu = MENU_ENTER_SUM;
+            enter_sum_type = EnterSum::PAY;
+            curr_menu = Menu::ENTER_SUM;
             return;
         }
 
         // If red button is pressed, go to LOGGED_MAIN_ACC menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = MENU_LOGGED_MAIN_ACC;
+            curr_menu = Menu::LOGGED_MAIN_ACC;
             return;
         }
     }
@@ -544,22 +544,22 @@ void MENU_MAIN_ACC_to_eco() {
 
     while (true) {
         if (joystick_to_the_left()) {
-            curr_menu = MENU_MAIN_ACC_PAY;
+            curr_menu = Menu::MAIN_ACC_PAY;
             return;
         }
 
         // If the joystick button is pressed, go to ENTER_SUM.
         if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
                               joy_button_stable_state, last_joy_debounce_time)) {
-            enter_sum_type = EnterSumType::MAIN_TO_ECO;
-            curr_menu = MENU_ENTER_SUM;
+            enter_sum_type = EnterSum::MAIN_TO_ECO;
+            curr_menu = Menu::ENTER_SUM;
             return;
         }
 
         // If red button is pressed, go to LOGGED_MAIN_ACC menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = MENU_LOGGED_MAIN_ACC;
+            curr_menu = Menu::LOGGED_MAIN_ACC;
             return;
         }
     }
@@ -582,7 +582,7 @@ void MENU_ECO_ACC_sum() {
         // If red button is pressed, go to LOGGED_ECO_ACC menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = MENU_LOGGED_ECO_ACC;
+            curr_menu = Menu::LOGGED_ECO_ACC;
             return;
         }
     }
@@ -596,47 +596,47 @@ void MENU_ENTER_sum() {
     lcd.setCursor(0, 0);
     lcd.print(F("Enter sum:"));
 
-    uint32_t sum = read_number_input(SUM);
+    uint32_t sum = read_number_input(ReadInputType::SUM);
 
     if (sum == 0) {
         // Red button was pressed.
-        if (enter_sum_type == ADD_CASH) curr_menu = MENU_MAIN_ACC_ADD;
-        else if (enter_sum_type == MAIN_TO_ECO) curr_menu = MENU_MAIN_ACC_TO_ECO;
-        else if (enter_sum_type == ECO_TO_MAIN) curr_menu = MENU_ECO_ACC_TO_MAIN;
-        else if (enter_sum_type == PAY) curr_menu = MENU_MAIN_ACC_PAY;
+        if (enter_sum_type == EnterSum::ADD_CASH) curr_menu = Menu::MAIN_ACC_ADD;
+        else if (enter_sum_type == EnterSum::MAIN_TO_ECO) curr_menu = Menu::MAIN_ACC_TO_ECO;
+        else if (enter_sum_type == EnterSum::ECO_TO_MAIN) curr_menu = Menu::ECO_ACC_TO_MAIN;
+        else if (enter_sum_type == EnterSum::PAY) curr_menu = Menu::MAIN_ACC_PAY;
 
-        enter_sum_type = NO_ENTER;
+        enter_sum_type = EnterSum::NO_ENTER;
         return;
     }
 
-    if (enter_sum_type == ADD_CASH) {
+    if (enter_sum_type == EnterSum::ADD_CASH) {
         users[logged_user].checking_sum += sum;
-        curr_menu = MENU_DONE;
-    } else if (enter_sum_type == MAIN_TO_ECO) {
+        curr_menu = Menu::DONE;
+    } else if (enter_sum_type == EnterSum::MAIN_TO_ECO) {
         if (users[logged_user].checking_sum >= sum) {
             users[logged_user].checking_sum -= sum;
             users[logged_user].economy_sum += sum;
-            curr_menu = MENU_DONE;
+            curr_menu = Menu::DONE;
         } else {
-            curr_menu = MENU_NO_FUNDS;
+            curr_menu = Menu::NO_FUNDS;
         }
-    } else if (enter_sum_type == ECO_TO_MAIN) {
+    } else if (enter_sum_type == EnterSum::ECO_TO_MAIN) {
         apply_interest(users[logged_user]);
-        
+
         if (users[logged_user].economy_sum >= (float)sum) {
             users[logged_user].economy_sum -= sum;
             users[logged_user].checking_sum += sum;
-            curr_menu = MENU_DONE;
+            curr_menu = Menu::DONE;
         } else {
-            curr_menu = MENU_NO_FUNDS;
+            curr_menu = Menu::NO_FUNDS;
         }
     } else {
         // enter_sum_type == PAY
         if (users[logged_user].checking_sum >= sum) {
             users[logged_user].checking_sum -= sum;
-            curr_menu = MENU_DONE;
+            curr_menu = Menu::DONE;
         } else {
-            curr_menu = MENU_NO_FUNDS;
+            curr_menu = Menu::NO_FUNDS;
         }
     }
 }
@@ -653,12 +653,12 @@ void MENU_DONE_done() {
         // If red button is pressed, go back to previous menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            if (enter_sum_type == ADD_CASH) curr_menu = MENU_MAIN_ACC_SUM;
-            else if (enter_sum_type == MAIN_TO_ECO) curr_menu = MENU_MAIN_ACC_SUM;
-            else if (enter_sum_type == ECO_TO_MAIN) curr_menu = MENU_ECO_ACC_SUM;
-            else if (enter_sum_type == PAY) curr_menu = MENU_MAIN_ACC_SUM;
+            if (enter_sum_type == EnterSum::ADD_CASH) curr_menu = Menu::MAIN_ACC_SUM;
+            else if (enter_sum_type == EnterSum::MAIN_TO_ECO) curr_menu = Menu::MAIN_ACC_SUM;
+            else if (enter_sum_type == EnterSum::ECO_TO_MAIN) curr_menu = Menu::ECO_ACC_SUM;
+            else if (enter_sum_type == EnterSum::PAY) curr_menu = Menu::MAIN_ACC_SUM;
 
-            enter_sum_type = NO_ENTER;
+            enter_sum_type = EnterSum::NO_ENTER;
             return;
         }
     }
@@ -676,12 +676,12 @@ void MENU_NO_funds() {
         // If red button is pressed, go back to previous menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            if (enter_sum_type == ADD_CASH) curr_menu = MENU_MAIN_ACC_SUM;
-            else if (enter_sum_type == MAIN_TO_ECO) curr_menu = MENU_MAIN_ACC_SUM;
-            else if (enter_sum_type == ECO_TO_MAIN) curr_menu = MENU_ECO_ACC_SUM;
-            else if (enter_sum_type == PAY) curr_menu = MENU_MAIN_ACC_SUM;
+            if (enter_sum_type == EnterSum::ADD_CASH) curr_menu = Menu::MAIN_ACC_SUM;
+            else if (enter_sum_type == EnterSum::MAIN_TO_ECO) curr_menu = Menu::MAIN_ACC_SUM;
+            else if (enter_sum_type == EnterSum::ECO_TO_MAIN) curr_menu = Menu::ECO_ACC_SUM;
+            else if (enter_sum_type == EnterSum::PAY) curr_menu = Menu::MAIN_ACC_SUM;
 
-            enter_sum_type = NO_ENTER;
+            enter_sum_type = EnterSum::NO_ENTER;
             return;
         }
     }
@@ -710,7 +710,7 @@ void MENU_DEBUG_wdt() {
         // If the red button is pressed, return to START menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = MENU_START_DEBUG;
+            curr_menu = Menu::START_DEBUG;
             return;
         }
     }

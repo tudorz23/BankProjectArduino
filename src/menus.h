@@ -4,64 +4,50 @@
 #include "Arduino.h"
 
 
-enum EnterSumType {
+enum class EnterSum {
     NO_ENTER, ADD_CASH, MAIN_TO_ECO, ECO_TO_MAIN, PAY
 };
 
 
-/* GLOBAL VARIABLE */
-extern uint8_t curr_menu;
-extern EnterSumType enter_sum_type;
-
-
 /* MENU CODES */
-constexpr uint8_t NO_MENU = 0;
-constexpr uint8_t MENU_ERROR = 1;
+enum class Menu {
+    NO_MENU, ERROR,
 
-// START menus
-constexpr uint8_t MENU_START_HELLO = 10;
-constexpr uint8_t MENU_START_LOGIN = 11;
-constexpr uint8_t MENU_START_REGISTER = 12;
-constexpr uint8_t MENU_START_DEBUG = 13;
+    // START menus
+    START_HELLO, START_LOGIN, START_REGISTER, START_DEBUG,
 
-// REGISTER menus
-constexpr uint8_t MENU_REGISTER_SCAN = 20;
-constexpr uint8_t MENU_REGISTER_ALREADY_REG = 21;
-constexpr uint8_t MENU_REGISTER_PIN = 22;
+    // REGISTER menus
+    REGISTER_SCAN, REGISTER_ALREADY_REG, REGISTER_PIN,
 
-// LOGIN menus
-constexpr uint8_t MENU_LOGIN_SCAN = 30;
-constexpr uint8_t MENU_LOGIN_NOT_REGISTERED = 31;
-constexpr uint8_t MENU_LOGIN_ENTER_PIN = 32;
-constexpr uint8_t MENU_LOGIN_WRONG_PIN = 33;
+    // LOGIN menus
+    LOGIN_SCAN, LOGIN_NOT_REGISTERED, LOGIN_ENTER_PIN, LOGIN_WRONG_PIN,
 
-// LOGGED menus
-constexpr uint8_t MENU_LOGGED_HELLO = 40;
-constexpr uint8_t MENU_LOGGED_MAIN_ACC = 41;
-constexpr uint8_t MENU_LOGGED_ECO_ACC = 42;
-constexpr uint8_t MENU_LOGGED_LOGOUT = 49;
+    // LOGGED menus
+    LOGGED_HELLO, LOGGED_MAIN_ACC, LOGGED_ECO_ACC, LOGGED_LOGOUT,
 
-// MAIN_ACC menus
-constexpr uint8_t MENU_MAIN_ACC_SUM = 50;
-constexpr uint8_t MENU_MAIN_ACC_ADD = 51;
-constexpr uint8_t MENU_MAIN_ACC_PAY = 52;
-constexpr uint8_t MENU_MAIN_ACC_TO_ECO = 53;
+    // MAIN_ACC menus
+    MAIN_ACC_SUM, MAIN_ACC_ADD, MAIN_ACC_PAY, MAIN_ACC_TO_ECO,
 
-// ECO_ACC menus
-constexpr uint8_t MENU_ECO_ACC_SUM = 60;
-constexpr uint8_t MENU_ECO_ACC_TO_MAIN = 61;
+    // ECO_ACC menus
+    ECO_ACC_SUM, ECO_ACC_TO_MAIN,
 
-// ENTER_SUM menu
-constexpr uint8_t MENU_ENTER_SUM = 100;
+    // ENTER_SUM menu
+    ENTER_SUM,
 
-// DONE menu
-constexpr uint8_t MENU_DONE = 110;
+    // DONE menu
+    DONE,
 
-// NO_FUNDS menu
-constexpr uint8_t MENU_NO_FUNDS = 120;
+    // NO_FUNDS menu
+    NO_FUNDS,
 
-// DEBUG menus
-constexpr uint8_t MENU_DEBUG_WDT = 130;
+    // DEBUG menus
+    DEBUG_WDT
+};
+
+
+/* GLOBAL VARIABLES */
+extern Menu curr_menu;
+extern EnterSum enter_sum_type;
 
 
 /*=====================================================================================*/
@@ -134,12 +120,12 @@ void MENU_ENTER_sum();
 
 /*=====================================================================================*/
 /* DONE menu */
-void MENU_DONE_done(); // can only be reached via MENU_ENTER_SUM
+void MENU_DONE_done(); // can only be reached via Menu::ENTER_SUM
 
 
 /*=====================================================================================*/
 /* NO_FUNDS menu */
-void MENU_NO_funds(); // can only be reached via MENU_ENTER_SUM
+void MENU_NO_funds(); // can only be reached via Menu::ENTER_SUM
 
 /*=====================================================================================*/
 /* DEBUG menus */

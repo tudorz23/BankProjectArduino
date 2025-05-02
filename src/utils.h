@@ -67,7 +67,7 @@ struct User {
 };
 
 
-enum ReadInputType {
+enum class ReadInputType {
     PIN, SUM
 };
 

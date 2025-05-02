@@ -98,7 +98,7 @@ int8_t get_user_idx_from_uid(char *uid) {
 
 uint32_t read_number_input(ReadInputType type) {
     // If a PIN is read, limit it to 4 digits, if a sum is read, limit it to MAX_SUM_DIGITS.
-    uint8_t max_digits = type == PIN ? PIN_SIZE : MAX_SUM_DIGITS;
+    uint8_t max_digits = type == ReadInputType::PIN ? PIN_SIZE : MAX_SUM_DIGITS;
 
     uint32_t number = 0;
     uint8_t read_key = 0;
@@ -115,11 +115,11 @@ uint32_t read_number_input(ReadInputType type) {
         // If joystick button is pressed.
         if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
                               joy_button_stable_state, last_joy_debounce_time)) {
-            if (type == PIN && idx == PIN_SIZE) {
+            if (type == ReadInputType::PIN && idx == PIN_SIZE) {
                 return number;
             }
 
-            if (type == SUM && idx > 0) {
+            if (type == ReadInputType::SUM && idx > 0) {
                 return number;
             }
         }
