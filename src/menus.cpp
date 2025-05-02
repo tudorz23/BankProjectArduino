@@ -199,13 +199,14 @@ void MENU_REGISTER_pin() {
     // PIN introduced successfuly.
     register_user(logged_user);
 
-    users[logged_user].checking_sum = 0;
-    users[logged_user].economy_sum = 0;
+    users[logged_user].checking_sum = 200;
+    users[logged_user].economy_sum = 100;
     users[logged_user].last_interest_update_time = wdt_counter;
     users[logged_user].pin = pin;
 
     #ifdef DEBUG
     Serial.println(pin);
+    Serial.println();
     #endif
 
     curr_menu = MENU_LOGGED_HELLO;
@@ -467,6 +468,9 @@ void MENU_ECO_ACC_sum() {
     lcd.setCursor(0, 0);
     lcd.print(F("Eco acc sum:"));
     lcd.setCursor(0, 1);
+
+    // Add interest to the economy sum.
+    apply_interest(users[logged_user]);
     lcd.print(users[logged_user].economy_sum);
 
     while (true) {
@@ -494,7 +498,7 @@ void MENU_DEBUG_wdt() {
         // If the joystick button is pressed, reprint the counter.
         if (joystick_to_up()) {
             lcd.setCursor(0, 1);
-            lcd.print("    ");
+            lcd.print(BLANK);
             lcd.setCursor(0, 1);
             lcd.print(wdt_counter);
         }

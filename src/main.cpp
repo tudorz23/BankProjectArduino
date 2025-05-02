@@ -45,7 +45,7 @@ int joy_button_stable_state = HIGH;
 int last_red_button_state = HIGH;
 int red_button_stable_state = HIGH;
 
-// To be incremented by the WDT ISR every 4 seconds.
+// To be incremented by the WDT ISR.
 volatile uint16_t wdt_counter = 0;
 
 bool friendships[MAX_USERS][MAX_USERS] = { false };
@@ -74,7 +74,7 @@ ISR(WDT_vect) {
 }
 
 
-// Setup the Watchdog timer to generate an interrupt every 4 seconds,
+// Setup the Watchdog timer to generate an interrupt every 1 second,
 // to manage an interest gain in the economy accounts.
 void watchdog_setup() {
     // Temporarily disable interrupts
@@ -86,8 +86,8 @@ void watchdog_setup() {
     // Set Watchdog Change Enable and Watchdog System Reset Enable
     WDTCSR |= (1 << WDCE) | (1 << WDE);
 
-    // Set interrupt mode and set timeout value to 4s
-    WDTCSR = (1 << WDIE) | (1 << WDP3);
+    // Set interrupt mode and set timeout value to 1s
+    WDTCSR = (1 << WDIE) | (1 << WDP2) | (1 << WDP1);
 
     // Re-enable interrupts.
     sei();
@@ -130,7 +130,7 @@ void setup() {
     // Start from the HELLO menu.
     curr_menu = MENU_START_HELLO;
 
-    // Setup the WDT to interrupt every 4 seconds.
+    // Setup the WDT.
     watchdog_setup();
 }
 

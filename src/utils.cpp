@@ -149,7 +149,7 @@ uint16_t get_pin_input() {
 
             // Print intermediary pin
             lcd.setCursor(0, 1);
-            lcd.print("    "); // clear
+            lcd.print(BLANK); // clear
             lcd.setCursor(0, 1);
             if (pin != 0) {
                 lcd.print(pin);
@@ -157,13 +157,7 @@ uint16_t get_pin_input() {
         }
 
         // Update last_key
-        if (read_digit != 0) {
-            // key is being pressed
-            last_key = read_digit;
-        } else {
-            // no key is being pressed
-            last_key = 0;     
-        }
+        last_key = read_digit;
     }
 }
 
@@ -175,4 +169,32 @@ void register_user(int8_t idx) {
 
 bool is_user_registered(int8_t idx) {
     return (registered_users & (1 << idx)) != 0;
+}
+
+
+void apply_interest(User &user) {
+    // The wdt_counter is incremented every 1 second.
+    uint16_t elapsed_time = wdt_counter - user.last_interest_update_time;
+
+    #ifdef DEBUG
+    Serial.println(user.last_interest_update_time);
+    Serial.println(elapsed_time);
+    #endif
+
+    // The interest is applied every APPLY_INTEREST_INTERVAL seconds.
+    uint8_t times_to_apply = elapsed_time / APPLY_INTEREST_INTERVAL;
+
+    // Apply the interest times_to_apply times.
+    for (uint8_t i = 0; i < times_to_apply; i++) {
+        user.economy_sum += user.economy_sum * ((float)INTEREST_RATE / 100.0);
+    }
+
+    // Last update basically happened at last_time + times_to_apply * INTERVAL.
+    user.last_interest_update_time += times_to_apply * APPLY_INTEREST_INTERVAL;
+
+    #ifdef DEBUG
+    Serial.println(user.last_interest_update_time);
+
+    Serial.println();
+    #endif
 }

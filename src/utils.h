@@ -6,7 +6,7 @@
 #include <MFRC522.h>
 #include <TTP229.h>
 
-// #define DEBUG
+#define DEBUG
 
 
 constexpr uint8_t MAX_NOTIFS = 4;
@@ -83,6 +83,11 @@ constexpr uint8_t MAX_USERS = 6;
 constexpr uint8_t UID_SIZE = 8;
 constexpr uint8_t PIN_SIZE = 4;
 
+constexpr uint8_t INTEREST_RATE = 2;
+constexpr uint8_t APPLY_INTEREST_INTERVAL = 15;
+
+constexpr char BLANK[] = "      ";
+
 
 /*=====================================================================================*/
 /* GLOBAL VARIABLES (shared with other files) */
@@ -147,5 +152,9 @@ void register_user(int8_t idx);
 // Returns true if the user is registered, false otherwise.
 bool is_user_registered(int8_t idx);
 
+
+// Updates the economy sum of the user, applying interest based
+// on the WDT indications.
+void apply_interest(User &user);
 
 #endif
