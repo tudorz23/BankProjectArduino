@@ -579,6 +579,40 @@ void MENU_ECO_ACC_sum() {
     lcd.print(users[logged_user].economy_sum);
 
     while (true) {
+        if (joystick_to_the_right()) {
+            curr_menu = Menu::ECO_ACC_TO_MAIN;
+            return;
+        }
+
+        // If red button is pressed, go to LOGGED_ECO_ACC menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = Menu::LOGGED_ECO_ACC;
+            return;
+        }
+    }
+}
+
+
+void MENU_ECO_ACC_to_main() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("To Main"));
+
+    while (true) {
+        if (joystick_to_the_left()) {
+            curr_menu = Menu::ECO_ACC_SUM;
+            return;
+        }
+
+        // If the joystick button is pressed, go to ENTER_SUM.
+        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
+                              joy_button_stable_state, last_joy_debounce_time)) {
+            enter_sum_type = EnterSum::ECO_TO_MAIN;
+            curr_menu = Menu::ENTER_SUM;
+            return;
+        }
+
         // If red button is pressed, go to LOGGED_ECO_ACC menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {

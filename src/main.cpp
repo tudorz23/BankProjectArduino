@@ -211,6 +211,9 @@ void loop() {
     case Menu::ECO_ACC_SUM:
         MENU_ECO_ACC_sum();
         break;
+    case Menu::ECO_ACC_TO_MAIN:
+        MENU_ECO_ACC_to_main();
+        break;
 
     // ENTER_SUM menu
     case Menu::ENTER_SUM:
