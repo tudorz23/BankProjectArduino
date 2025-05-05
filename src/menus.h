@@ -31,11 +31,13 @@ enum class Menu {
     // ECO_ACC menus
     ECO_ACC_SUM, ECO_ACC_TO_MAIN,
 
+    // FRIENDS menus
+
     // ENTER_SUM menu
     ENTER_SUM,
 
-    // DONE menu
-    DONE,
+    // TRANSACTION_DONE menu
+    TRANSACTION_DONE,
 
     // NO_FUNDS menu
     NO_FUNDS,
@@ -106,8 +108,8 @@ void MENU_ENTER_sum();
 
 
 /*=====================================================================================*/
-/* DONE menu */
-void MENU_DONE_done(); // can only be reached via Menu::ENTER_SUM
+/* TRANSACTION_DONE menu */
+void MENU_TRANSACTION_DONE_done(); // can only be reached via Menu::ENTER_SUM
 
 
 /*=====================================================================================*/

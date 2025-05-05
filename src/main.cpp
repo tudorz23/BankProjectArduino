@@ -51,6 +51,7 @@ int red_button_stable_state = HIGH;
 // To be incremented by the WDT ISR.
 volatile uint16_t wdt_counter = 0;
 
+// frienships[i][j] = true <=> users i and j are friends
 bool friendships[MAX_USERS][MAX_USERS] = { false };
 
 
@@ -220,9 +221,9 @@ void loop() {
         MENU_ENTER_sum();
         break;
 
-    // DONE menu
-    case Menu::DONE:
-        MENU_DONE_done();
+    // TRANSACTION_DONE menu
+    case Menu::TRANSACTION_DONE:
+        MENU_TRANSACTION_DONE_done();
         break;
 
     // NO_FUNDS menu

@@ -645,12 +645,12 @@ void MENU_ENTER_sum() {
 
     if (enter_sum_type == EnterSum::ADD_CASH) {
         users[logged_user].checking_sum += sum;
-        curr_menu = Menu::DONE;
+        curr_menu = Menu::TRANSACTION_DONE;
     } else if (enter_sum_type == EnterSum::MAIN_TO_ECO) {
         if (users[logged_user].checking_sum >= sum) {
             users[logged_user].checking_sum -= sum;
             users[logged_user].economy_sum += sum;
-            curr_menu = Menu::DONE;
+            curr_menu = Menu::TRANSACTION_DONE;
         } else {
             curr_menu = Menu::NO_FUNDS;
         }
@@ -660,7 +660,7 @@ void MENU_ENTER_sum() {
         if (users[logged_user].economy_sum >= (float)sum) {
             users[logged_user].economy_sum -= sum;
             users[logged_user].checking_sum += sum;
-            curr_menu = Menu::DONE;
+            curr_menu = Menu::TRANSACTION_DONE;
         } else {
             curr_menu = Menu::NO_FUNDS;
         }
@@ -668,7 +668,7 @@ void MENU_ENTER_sum() {
         // enter_sum_type == PAY
         if (users[logged_user].checking_sum >= sum) {
             users[logged_user].checking_sum -= sum;
-            curr_menu = Menu::DONE;
+            curr_menu = Menu::TRANSACTION_DONE;
         } else {
             curr_menu = Menu::NO_FUNDS;
         }
@@ -677,8 +677,8 @@ void MENU_ENTER_sum() {
 
 
 /*=====================================================================================*/
-/* DONE menu */
-void MENU_DONE_done() {
+/* TRANSACTION_DONE menu */
+void MENU_TRANSACTION_DONE_done() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Done"));
