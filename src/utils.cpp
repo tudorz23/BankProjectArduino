@@ -169,12 +169,12 @@ uint32_t read_number_input(ReadInputType type) {
 }
 
 
-void register_user(int8_t idx) {
+void register_user(uint8_t idx) {
     registered_users |= (1 << idx);
 }
 
 
-bool is_user_registered(int8_t idx) {
+bool is_user_registered(uint8_t idx) {
     return (registered_users & (1 << idx)) != 0;
 }
 
@@ -204,4 +204,107 @@ void apply_interest(User &user) {
 
     Serial.println();
     #endif
+}
+
+
+int8_t get_first_friend(uint8_t logged_user) {
+    for (uint8_t idx = 0; idx < MAX_USERS; idx++) {
+        if (idx == logged_user) {
+            continue;
+        }
+
+        if (friendships[logged_user][idx]) {
+            return idx;
+        }
+    }
+
+    // No friend found.
+    return -1;
+}
+
+
+uint8_t get_prev_friend(uint8_t logged_user, uint8_t curr_friend) {
+    for (int8_t idx = curr_friend - 1; idx >= 0; idx--) {
+        if (idx == logged_user) {
+            continue;
+        }
+
+        if (friendships[logged_user][idx]) {
+            return idx;
+        }
+    }
+
+    return curr_friend;
+}
+
+
+uint8_t get_next_friend(uint8_t logged_user, uint8_t curr_friend) {
+    for (uint8_t idx = curr_friend + 1; idx < MAX_USERS; idx++) {
+        if (idx == logged_user) {
+            continue;
+        }
+
+        if (friendships[logged_user][idx]) {
+            return idx;
+        }
+    }
+
+    return curr_friend;
+}
+
+
+int8_t get_first_friend_candidate(uint8_t logged_user) {
+    for (uint8_t idx = 0; idx < MAX_USERS; idx++) {
+        if (idx == logged_user) {
+            continue;
+        }
+        
+        if (!is_user_registered(idx)) {
+            continue;
+        }
+
+        if (!friendships[logged_user][idx]) {
+            return idx;
+        }
+    }
+
+    return -1;
+}
+
+
+uint8_t get_prev_friend_candidate(uint8_t logged_user, uint8_t curr_candidate) {
+    for (int8_t idx = curr_candidate - 1; idx >= 0; idx--) {
+        if (idx == logged_user) {
+            continue;
+        }
+
+        if (!is_user_registered(idx)) {
+            continue;
+        }
+
+        if (!friendships[logged_user][idx]) {
+            return idx;
+        }
+    }
+
+    return curr_candidate;
+}
+
+
+uint8_t get_next_friend_candidate(uint8_t logged_user, uint8_t curr_candidate) {
+    for (uint8_t idx = curr_candidate + 1; idx < MAX_USERS; idx++) {
+        if (idx == logged_user) {
+            continue;
+        }
+
+        if (!is_user_registered(idx)) {
+            continue;
+        }
+
+        if (!friendships[logged_user][idx]) {
+            return idx;
+        }
+    }
+
+    return curr_candidate;
 }

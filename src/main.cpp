@@ -193,6 +193,9 @@ void loop() {
     case Menu::LOGGED_LOGOUT:
         MENU_LOGGED_logout();
         break;
+    case Menu::LOGGED_FRIENDS:
+        MENU_LOGGED_friends();
+        break;
 
     // MAIN_ACC menus
     case Menu::MAIN_ACC_SUM:
@@ -214,6 +217,30 @@ void loop() {
         break;
     case Menu::ECO_ACC_TO_MAIN:
         MENU_ECO_ACC_to_main();
+        break;
+
+    // FRIENDS menus
+    case Menu::FRIENDS_SEE:
+        MENU_FRIENDS_see();
+        break;
+    case Menu::FRIENDS_ADD:
+        MENU_FRIENDS_add();
+        break;
+
+    // VIEW_FRIENDS menus
+    case Menu::VIEW_FRIENDS:
+        MENU_VIEW_FRIENDS_see();
+        break;
+    case Menu::VIEW_FRIENDS_NO_FRIEND:
+        MENU_VIEW_FRIENDS_no_friend();
+        break;
+
+    // ADD_FRIENDS menus.
+    case Menu::ADD_FRIENDS:
+        MENU_ADD_FRIENDS_add();
+        break;
+    case Menu::ADD_FRIENDS_NO_CANDIDATE:
+        MENU_ADD_FRIENDS_no_candidate();
         break;
 
     // ENTER_SUM menu
