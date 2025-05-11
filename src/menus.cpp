@@ -785,32 +785,76 @@ void MENU_ADD_FRIENDS_add() {
 
     lcd.print(names[curr_candidate]);
 
+    bool added_a_friend = false;
+
     while (true) {
-        if (joystick_to_the_left()) {
-            curr_candidate = get_prev_friend_candidate(logged_user, curr_candidate);
-            lcd.clear();
-            lcd.setCursor(0, 0);
-            lcd.print(names[curr_candidate]);
-        }
+        if (!added_a_friend) {
+            // Menu where the friend candidates are shown.
 
-        if (joystick_to_the_right()) {
-            curr_candidate = get_next_friend_candidate(logged_user, curr_candidate);
-            lcd.clear();
-            lcd.setCursor(0, 0);
-            lcd.print(names[curr_candidate]);
-        }
+            if (joystick_to_the_left()) {
+                curr_candidate = get_prev_friend_candidate(logged_user, curr_candidate);
+                lcd.clear();
+                lcd.setCursor(0, 0);
+                lcd.print(names[curr_candidate]);
+            }
 
-        // If red button is pressed, go to FRIENDS_add menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = Menu::FRIENDS_ADD;
-            return;
+            if (joystick_to_the_right()) {
+                curr_candidate = get_next_friend_candidate(logged_user, curr_candidate);
+                lcd.clear();
+                lcd.setCursor(0, 0);
+                lcd.print(names[curr_candidate]);
+            }
+
+            // If the joystick button is pressed, add the friend and set added_a_friend to true.
+            if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
+                                joy_button_stable_state, last_joy_debounce_time)) {
+                // Add the friend.
+                friendships[logged_user][curr_candidate] = true;
+                friendships[curr_candidate][logged_user] = true;
+
+                added_a_friend = true;
+
+                lcd.setCursor(0, 1);
+                lcd.print("is now a friend");
+                continue;
+            }
+
+            // If red button is pressed, go to FRIENDS_add menu.
+            if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                                red_button_stable_state, last_red_debounce_time)) {
+                curr_menu = Menu::FRIENDS_ADD;
+                return;
+            }
+        }
+        
+        else {
+            // Menu after a candidate was clicked.
+            lcd.clear();
+
+            // If red button is pressed, start showing other friend candidates.
+            if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                                red_button_stable_state, last_red_debounce_time)) {
+                // Try to get another candidate.
+                curr_candidate = get_first_friend_candidate(logged_user);
+                if (curr_candidate == -1) {
+                    // No candidate found.
+                    curr_menu = Menu::ADD_FRIENDS_NO_CANDIDATE;
+                    return;
+                }
+
+                lcd.setCursor(0, 0);
+                lcd.print(names[curr_candidate]);
+
+                added_a_friend = false;
+            }
         }
     }
 }
 
 
 void MENU_ADD_FRIENDS_no_candidate() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
     lcd.print(F("Noone to"));
     lcd.setCursor(0, 1);
     lcd.print(F("befriend"));
@@ -824,7 +868,6 @@ void MENU_ADD_FRIENDS_no_candidate() {
         }
     }
 }
-
 
 
 /*=====================================================================================*/
