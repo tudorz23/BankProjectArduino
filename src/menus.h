@@ -5,7 +5,7 @@
 
 
 enum class EnterSum {
-    NO_ENTER, ADD_CASH, MAIN_TO_ECO, ECO_TO_MAIN, PAY
+    NO_ENTER, ADD_CASH, MAIN_TO_ECO, ECO_TO_MAIN, PAY, SEND_FRIEND
 };
 
 
@@ -27,10 +27,13 @@ enum class Menu {
     LOGGED_FRIENDS,
 
     // MAIN_ACC menus
-    MAIN_ACC_SUM, MAIN_ACC_ADD, MAIN_ACC_PAY, MAIN_ACC_TO_ECO,
+    MAIN_ACC_SUM, MAIN_ACC_ADD, MAIN_ACC_PAY, MAIN_ACC_TO_ECO, MAIN_ACC_SEND_FRIEND,
 
     // ECO_ACC menus
     ECO_ACC_SUM, ECO_ACC_TO_MAIN,
+
+    // SEND_FRIEND menus
+    SEND_FRIEND_CHOOSE, SEND_FRIEND_NO_FRIEND,
 
     // FRIENDS menus
     FRIENDS_SEE, FRIENDS_ADD,
@@ -103,12 +106,19 @@ void MENU_MAIN_ACC_sum();
 void MENU_MAIN_ACC_add();
 void MENU_MAIN_ACC_pay();
 void MENU_MAIN_ACC_to_eco();
+void MENU_MAIN_ACC_send_friend();
 
 
 /*=====================================================================================*/
 /* ECO_ACC menus */
 void MENU_ECO_ACC_sum();
 void MENU_ECO_ACC_to_main();
+
+
+/*=====================================================================================*/
+/* SEND_FRIEND menus */
+void MENU_SEND_FRIEND_choose();
+void MENU_SEND_FRIEND_no_friend();
 
 
 /*=====================================================================================*/

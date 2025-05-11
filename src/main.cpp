@@ -54,6 +54,8 @@ volatile uint16_t wdt_counter = 0;
 // frienships[i][j] = true <=> users i and j are friends
 bool friendships[MAX_USERS][MAX_USERS] = { false };
 
+// To know in the Menu::ENTER_SUM who is the target friend.
+int8_t friend_to_send_money = NO_USER;
 
 void init_database() {
     names[0] = "Lewis Hamilton";
@@ -210,6 +212,9 @@ void loop() {
     case Menu::MAIN_ACC_TO_ECO:
         MENU_MAIN_ACC_to_eco();
         break;
+    case Menu::MAIN_ACC_SEND_FRIEND:
+        MENU_MAIN_ACC_send_friend();
+        break;
     
     // ECO_ACC menus
     case Menu::ECO_ACC_SUM:
@@ -217,6 +222,14 @@ void loop() {
         break;
     case Menu::ECO_ACC_TO_MAIN:
         MENU_ECO_ACC_to_main();
+        break;
+
+    // SEND_FRIEND menus
+    case Menu::SEND_FRIEND_CHOOSE:
+        MENU_SEND_FRIEND_choose();
+        break;
+    case Menu::SEND_FRIEND_NO_FRIEND:
+        MENU_SEND_FRIEND_no_friend();
         break;
 
     // FRIENDS menus

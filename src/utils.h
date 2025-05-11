@@ -120,6 +120,8 @@ extern volatile uint16_t wdt_counter;
 
 extern bool friendships[MAX_USERS][MAX_USERS];
 
+extern int8_t friend_to_send_money;
+
 
 /*=====================================================================================*/
 /* HELPER FUNCTIONS */
