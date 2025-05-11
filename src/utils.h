@@ -120,6 +120,8 @@ extern volatile uint16_t wdt_counter;
 
 extern bool friendships[MAX_USERS][MAX_USERS];
 
+extern int8_t friend_to_send_money;
+
 
 /*=====================================================================================*/
 /* HELPER FUNCTIONS */
@@ -152,13 +154,33 @@ int8_t get_user_idx_from_uid(char *uid);
 uint32_t read_number_input(ReadInputType type);
 
 // Marks an user as registered using bitwise operations.
-void register_user(int8_t idx);
+void register_user(uint8_t idx);
 
 // Returns true if the user is registered, false otherwise.
-bool is_user_registered(int8_t idx);
+bool is_user_registered(uint8_t idx);
 
 // Updates the economy sum of the user, applying interest based
 // on the WDT indications.
 void apply_interest(User &user);
+
+// Searches for the lowest user index that is a friend of the logged_user.
+// If there is no such index, returns -1.
+int8_t get_first_friend(uint8_t logged_user);
+
+// Searches for the previous friend of the logged_user.
+uint8_t get_prev_friend(uint8_t logged_user, uint8_t curr_friend);
+
+// Searches for the next friend of the logged_user.
+uint8_t get_next_friend(uint8_t logged_user, uint8_t curr_friend);
+
+// Searches for the lowest registered user index that is not a friend of the logged_user.
+// If there is no such index, returns -1.
+int8_t get_first_friend_candidate(uint8_t logged_user);
+
+// Searches for the previous friend candidate of the logged_user.
+uint8_t get_prev_friend_candidate(uint8_t logged_user, uint8_t curr_candidate);
+
+// Searches for the next friend candidate of the logged_user.
+uint8_t get_next_friend_candidate(uint8_t logged_user, uint8_t curr_candidate);
 
 #endif

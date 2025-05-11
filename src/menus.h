@@ -5,7 +5,7 @@
 
 
 enum class EnterSum {
-    NO_ENTER, ADD_CASH, MAIN_TO_ECO, ECO_TO_MAIN, PAY
+    NO_ENTER, ADD_CASH, MAIN_TO_ECO, ECO_TO_MAIN, PAY, SEND_FRIEND
 };
 
 
@@ -24,18 +24,31 @@ enum class Menu {
 
     // LOGGED menus
     LOGGED_HELLO, LOGGED_MAIN_ACC, LOGGED_ECO_ACC, LOGGED_LOGOUT,
+    LOGGED_FRIENDS,
 
     // MAIN_ACC menus
-    MAIN_ACC_SUM, MAIN_ACC_ADD, MAIN_ACC_PAY, MAIN_ACC_TO_ECO,
+    MAIN_ACC_SUM, MAIN_ACC_ADD, MAIN_ACC_PAY, MAIN_ACC_TO_ECO, MAIN_ACC_SEND_FRIEND,
 
     // ECO_ACC menus
     ECO_ACC_SUM, ECO_ACC_TO_MAIN,
 
+    // SEND_FRIEND menus
+    SEND_FRIEND_CHOOSE, SEND_FRIEND_NO_FRIEND,
+
+    // FRIENDS menus
+    FRIENDS_SEE, FRIENDS_ADD,
+    
+    // VIEW_FRIENDS menus
+    VIEW_FRIENDS, VIEW_FRIENDS_NO_FRIEND,
+
+    // ADD_FRIENDS menus
+    ADD_FRIENDS, ADD_FRIENDS_NO_CANDIDATE,
+
     // ENTER_SUM menu
     ENTER_SUM,
 
-    // DONE menu
-    DONE,
+    // TRANSACTION_DONE menu
+    TRANSACTION_DONE,
 
     // NO_FUNDS menu
     NO_FUNDS,
@@ -84,6 +97,7 @@ void MENU_LOGGED_hello();
 void MENU_LOGGED_main_acc();
 void MENU_LOGGED_eco_acc();
 void MENU_LOGGED_logout(); // Alters `logged_user`
+void MENU_LOGGED_friends();
 
 
 /*=====================================================================================*/
@@ -92,6 +106,7 @@ void MENU_MAIN_ACC_sum();
 void MENU_MAIN_ACC_add();
 void MENU_MAIN_ACC_pay();
 void MENU_MAIN_ACC_to_eco();
+void MENU_MAIN_ACC_send_friend();
 
 
 /*=====================================================================================*/
@@ -101,13 +116,37 @@ void MENU_ECO_ACC_to_main();
 
 
 /*=====================================================================================*/
+/* SEND_FRIEND menus */
+void MENU_SEND_FRIEND_choose();
+void MENU_SEND_FRIEND_no_friend();
+
+
+/*=====================================================================================*/
+/* FRIENDS menus */
+void MENU_FRIENDS_see();
+void MENU_FRIENDS_add();
+
+
+/*=====================================================================================*/
+/* VIEW_FRIENDS menus */
+void MENU_VIEW_FRIENDS_see();
+void MENU_VIEW_FRIENDS_no_friend();
+
+
+/*=====================================================================================*/
+/* ADD_FRIENDS menus */
+void MENU_ADD_FRIENDS_add();
+void MENU_ADD_FRIENDS_no_candidate();
+
+
+/*=====================================================================================*/
 /* ENTER_SUM menu */
 void MENU_ENTER_sum();
 
 
 /*=====================================================================================*/
-/* DONE menu */
-void MENU_DONE_done(); // can only be reached via Menu::ENTER_SUM
+/* TRANSACTION_DONE menu */
+void MENU_TRANSACTION_DONE_done(); // can only be reached via Menu::ENTER_SUM
 
 
 /*=====================================================================================*/

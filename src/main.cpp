@@ -51,8 +51,11 @@ int red_button_stable_state = HIGH;
 // To be incremented by the WDT ISR.
 volatile uint16_t wdt_counter = 0;
 
+// frienships[i][j] = true <=> users i and j are friends
 bool friendships[MAX_USERS][MAX_USERS] = { false };
 
+// To know in the Menu::ENTER_SUM who is the target friend.
+int8_t friend_to_send_money = NO_USER;
 
 void init_database() {
     names[0] = "Lewis Hamilton";
@@ -192,6 +195,9 @@ void loop() {
     case Menu::LOGGED_LOGOUT:
         MENU_LOGGED_logout();
         break;
+    case Menu::LOGGED_FRIENDS:
+        MENU_LOGGED_friends();
+        break;
 
     // MAIN_ACC menus
     case Menu::MAIN_ACC_SUM:
@@ -206,6 +212,9 @@ void loop() {
     case Menu::MAIN_ACC_TO_ECO:
         MENU_MAIN_ACC_to_eco();
         break;
+    case Menu::MAIN_ACC_SEND_FRIEND:
+        MENU_MAIN_ACC_send_friend();
+        break;
     
     // ECO_ACC menus
     case Menu::ECO_ACC_SUM:
@@ -215,14 +224,46 @@ void loop() {
         MENU_ECO_ACC_to_main();
         break;
 
+    // SEND_FRIEND menus
+    case Menu::SEND_FRIEND_CHOOSE:
+        MENU_SEND_FRIEND_choose();
+        break;
+    case Menu::SEND_FRIEND_NO_FRIEND:
+        MENU_SEND_FRIEND_no_friend();
+        break;
+
+    // FRIENDS menus
+    case Menu::FRIENDS_SEE:
+        MENU_FRIENDS_see();
+        break;
+    case Menu::FRIENDS_ADD:
+        MENU_FRIENDS_add();
+        break;
+
+    // VIEW_FRIENDS menus
+    case Menu::VIEW_FRIENDS:
+        MENU_VIEW_FRIENDS_see();
+        break;
+    case Menu::VIEW_FRIENDS_NO_FRIEND:
+        MENU_VIEW_FRIENDS_no_friend();
+        break;
+
+    // ADD_FRIENDS menus.
+    case Menu::ADD_FRIENDS:
+        MENU_ADD_FRIENDS_add();
+        break;
+    case Menu::ADD_FRIENDS_NO_CANDIDATE:
+        MENU_ADD_FRIENDS_no_candidate();
+        break;
+
     // ENTER_SUM menu
     case Menu::ENTER_SUM:
         MENU_ENTER_sum();
         break;
 
-    // DONE menu
-    case Menu::DONE:
-        MENU_DONE_done();
+    // TRANSACTION_DONE menu
+    case Menu::TRANSACTION_DONE:
+        MENU_TRANSACTION_DONE_done();
         break;
 
     // NO_FUNDS menu

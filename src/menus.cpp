@@ -19,7 +19,6 @@ void MENU_error() {
 
 /*=====================================================================================*/
 /* START menus */
-
 void MENU_START_hello() {
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -109,7 +108,6 @@ void MENU_START_debug() {
 
 /*=====================================================================================*/
 /* REGISTER menus */
-
 void MENU_REGISTER_scan() {
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -218,7 +216,6 @@ void MENU_REGISTER_pin() {
 
 /*=====================================================================================*/
 /* LOGIN MENUS */
-
 void MENU_LOGIN_scan() {
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -334,7 +331,6 @@ void MENU_LOGIN_wrong_pin() {
 
 /*=====================================================================================*/
 /* LOGGED menus */
-
 void MENU_LOGGED_hello() {
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -403,6 +399,11 @@ void MENU_LOGGED_eco_acc() {
             return;
         }
 
+        if (joystick_to_the_right()) {
+            curr_menu = Menu::LOGGED_FRIENDS;
+            return;
+        }
+
         // If Joystick button is pressed, access the ECO_ACC menu.
         if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
                               joy_button_stable_state, last_joy_debounce_time)) {
@@ -438,6 +439,34 @@ void MENU_LOGGED_logout() {
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
             curr_menu = Menu::LOGGED_HELLO;
+            return;
+        }
+    }
+}
+
+
+void MENU_LOGGED_friends() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Friends"));
+
+    while (true) {
+        if (joystick_to_the_left()) {
+            curr_menu = Menu::LOGGED_ECO_ACC;
+            return;
+        }
+
+        // If Joystick button is pressed, access the FRIENDS menu.
+        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
+                              joy_button_stable_state, last_joy_debounce_time)) {
+            curr_menu = Menu::FRIENDS_SEE;
+            return;
+        }
+
+        // If red button is pressed, go to LOGOUT menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = Menu::LOGGED_LOGOUT;
             return;
         }
     }
@@ -548,11 +577,44 @@ void MENU_MAIN_ACC_to_eco() {
             return;
         }
 
+        if (joystick_to_the_right()) {
+            curr_menu = Menu::MAIN_ACC_SEND_FRIEND;
+            return;
+        }
+
         // If the joystick button is pressed, go to ENTER_SUM.
         if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
                               joy_button_stable_state, last_joy_debounce_time)) {
             enter_sum_type = EnterSum::MAIN_TO_ECO;
             curr_menu = Menu::ENTER_SUM;
+            return;
+        }
+
+        // If red button is pressed, go to LOGGED_MAIN_ACC menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = Menu::LOGGED_MAIN_ACC;
+            return;
+        }
+    }
+}
+
+
+void MENU_MAIN_ACC_send_friend() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Send to friend"));
+
+    while (true) {
+        if (joystick_to_the_left()) {
+            curr_menu = Menu::MAIN_ACC_TO_ECO;
+            return;
+        }
+
+        // If the joystick button is pressed, go to SEND_FRIEND_choose.
+        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
+                              joy_button_stable_state, last_joy_debounce_time)) {
+            curr_menu = Menu::SEND_FRIEND_CHOOSE;
             return;
         }
 
@@ -624,6 +686,285 @@ void MENU_ECO_ACC_to_main() {
 
 
 /*=====================================================================================*/
+/* SEND_FRIEND menus */
+void MENU_SEND_FRIEND_choose() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+
+    int8_t curr_friend = get_first_friend(logged_user);
+    if (curr_friend == -1) {
+        // No friend found.
+        curr_menu = Menu::SEND_FRIEND_NO_FRIEND;
+        return;
+    }
+
+    lcd.print(names[curr_friend]);
+
+    while (true) {
+        if (joystick_to_the_left()) {
+            curr_friend = get_prev_friend(logged_user, curr_friend);
+            lcd.clear();
+            lcd.setCursor(0, 0);
+            lcd.print(names[curr_friend]);
+        }
+
+        if (joystick_to_the_right()) {
+            curr_friend = get_next_friend(logged_user, curr_friend);
+            lcd.clear();
+            lcd.setCursor(0, 0);
+            lcd.print(names[curr_friend]);
+        }
+
+        // If the joystick button is pressed, go to ENTER_SUM.
+        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
+                              joy_button_stable_state, last_joy_debounce_time)) {
+            friend_to_send_money = curr_friend;
+            enter_sum_type = EnterSum::SEND_FRIEND;
+            curr_menu = Menu::ENTER_SUM;
+            return;
+        }
+
+        // If red button is pressed, go to MAIN_ACC_SEND_FRIEND menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = Menu::MAIN_ACC_SEND_FRIEND;
+            return;
+        }
+    }
+}
+
+
+void MENU_SEND_FRIEND_no_friend() {
+    lcd.print(F("You have"));
+    lcd.setCursor(0, 1);
+    lcd.print(F("no friends"));
+
+    while (true) {
+        // If red button is pressed, go to MAIN_ACC_SEND_FRIEND menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = Menu::MAIN_ACC_SEND_FRIEND;
+            return;
+        }
+    }
+}
+
+
+/*=====================================================================================*/
+/* FRIENDS menus */
+void MENU_FRIENDS_see() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("See friends"));
+
+    while (true) {
+        if (joystick_to_the_right()) {
+            curr_menu = Menu::FRIENDS_ADD;
+            return;
+        }
+
+        // If the joystick button is pressed, go to VIEW_FRIENDS menu.
+        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
+                              joy_button_stable_state, last_joy_debounce_time)) {
+            curr_menu = Menu::VIEW_FRIENDS;
+            return;
+        }
+
+        // If red button is pressed, go to LOGGED_FRIENDS menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = Menu::LOGGED_FRIENDS;
+            return;
+        }
+    }
+}
+
+
+void MENU_FRIENDS_add() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Add friends"));
+
+    while (true) {
+        if (joystick_to_the_left()) {
+            curr_menu = Menu::FRIENDS_SEE;
+            return;
+        }
+
+        // If the joystick button is pressed, go to ADD_FRIENDS menu.
+        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
+                              joy_button_stable_state, last_joy_debounce_time)) {
+            curr_menu = Menu::ADD_FRIENDS;
+            return;
+        }
+
+        // If red button is pressed, go to LOGGED_FRIENDS menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = Menu::LOGGED_FRIENDS;
+            return;
+        }
+    }
+}
+
+
+/*=====================================================================================*/
+/* VIEW_FRIENDS menus */
+void MENU_VIEW_FRIENDS_see() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+
+    int8_t curr_friend = get_first_friend(logged_user);
+    if (curr_friend == -1) {
+        // No friend found.
+        curr_menu = Menu::VIEW_FRIENDS_NO_FRIEND;
+        return;
+    }
+
+    lcd.print(names[curr_friend]);
+
+    while (true) {
+        if (joystick_to_the_left()) {
+            curr_friend = get_prev_friend(logged_user, curr_friend);
+            lcd.clear();
+            lcd.setCursor(0, 0);
+            lcd.print(names[curr_friend]);
+        }
+
+        if (joystick_to_the_right()) {
+            curr_friend = get_next_friend(logged_user, curr_friend);
+            lcd.clear();
+            lcd.setCursor(0, 0);
+            lcd.print(names[curr_friend]);
+        }
+
+        // If red button is pressed, go to FRIENDS_see menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = Menu::FRIENDS_SEE;
+            return;
+        }
+    }
+}
+
+
+void MENU_VIEW_FRIENDS_no_friend() {
+    lcd.print(F("You have"));
+    lcd.setCursor(0, 1);
+    lcd.print(F("no friends"));
+
+    while (true) {
+        // If red button is pressed, go to FRIENDS_see menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = Menu::FRIENDS_SEE;
+            return;
+        }
+    }
+}
+
+
+/*=====================================================================================*/
+/* ADD_FRIENDS menus */
+void MENU_ADD_FRIENDS_add() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+
+    int8_t curr_candidate = get_first_friend_candidate(logged_user);
+    if (curr_candidate == -1) {
+        // No candidate found.
+        curr_menu = Menu::ADD_FRIENDS_NO_CANDIDATE;
+        return;
+    }
+
+    lcd.print(names[curr_candidate]);
+
+    bool added_a_friend = false;
+
+    while (true) {
+        if (!added_a_friend) {
+            // Menu where the friend candidates are shown.
+
+            if (joystick_to_the_left()) {
+                curr_candidate = get_prev_friend_candidate(logged_user, curr_candidate);
+                lcd.clear();
+                lcd.setCursor(0, 0);
+                lcd.print(names[curr_candidate]);
+            }
+
+            if (joystick_to_the_right()) {
+                curr_candidate = get_next_friend_candidate(logged_user, curr_candidate);
+                lcd.clear();
+                lcd.setCursor(0, 0);
+                lcd.print(names[curr_candidate]);
+            }
+
+            // If the joystick button is pressed, add the friend and set added_a_friend to true.
+            if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
+                                joy_button_stable_state, last_joy_debounce_time)) {
+                // Add the friend.
+                friendships[logged_user][curr_candidate] = true;
+                friendships[curr_candidate][logged_user] = true;
+
+                added_a_friend = true;
+
+                lcd.setCursor(0, 1);
+                lcd.print("is now a friend");
+                continue;
+            }
+
+            // If red button is pressed, go to FRIENDS_add menu.
+            if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                                red_button_stable_state, last_red_debounce_time)) {
+                curr_menu = Menu::FRIENDS_ADD;
+                return;
+            }
+        }
+
+        else {
+            // Menu after a candidate was clicked.
+
+            // If red button is pressed, start showing other friend candidates.
+            if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                                red_button_stable_state, last_red_debounce_time)) {
+                // Try to get another candidate.
+                curr_candidate = get_first_friend_candidate(logged_user);
+                if (curr_candidate == -1) {
+                    // No candidate found.
+                    curr_menu = Menu::ADD_FRIENDS_NO_CANDIDATE;
+                    return;
+                }
+
+                lcd.clear();
+                lcd.setCursor(0, 0);
+                lcd.print(names[curr_candidate]);
+
+                added_a_friend = false;
+            }
+        }
+    }
+}
+
+
+void MENU_ADD_FRIENDS_no_candidate() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Noone to"));
+    lcd.setCursor(0, 1);
+    lcd.print(F("befriend"));
+
+    while (true) {
+        // If red button is pressed, go to FRIENDS_add menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = Menu::FRIENDS_ADD;
+            return;
+        }
+    }
+}
+
+
+/*=====================================================================================*/
 /* ENTER_SUM menu */
 void MENU_ENTER_sum() {
     lcd.clear();
@@ -633,11 +974,12 @@ void MENU_ENTER_sum() {
     uint32_t sum = read_number_input(ReadInputType::SUM);
 
     if (sum == 0) {
-        // Red button was pressed.
+        // Red button was pressed, go back to previous menu.
         if (enter_sum_type == EnterSum::ADD_CASH) curr_menu = Menu::MAIN_ACC_ADD;
         else if (enter_sum_type == EnterSum::MAIN_TO_ECO) curr_menu = Menu::MAIN_ACC_TO_ECO;
         else if (enter_sum_type == EnterSum::ECO_TO_MAIN) curr_menu = Menu::ECO_ACC_TO_MAIN;
         else if (enter_sum_type == EnterSum::PAY) curr_menu = Menu::MAIN_ACC_PAY;
+        else if (enter_sum_type == EnterSum::SEND_FRIEND) curr_menu = Menu::SEND_FRIEND_CHOOSE;
 
         enter_sum_type = EnterSum::NO_ENTER;
         return;
@@ -645,40 +987,56 @@ void MENU_ENTER_sum() {
 
     if (enter_sum_type == EnterSum::ADD_CASH) {
         users[logged_user].checking_sum += sum;
-        curr_menu = Menu::DONE;
-    } else if (enter_sum_type == EnterSum::MAIN_TO_ECO) {
+        curr_menu = Menu::TRANSACTION_DONE;
+    }
+    else if (enter_sum_type == EnterSum::MAIN_TO_ECO) {
         if (users[logged_user].checking_sum >= sum) {
             users[logged_user].checking_sum -= sum;
             users[logged_user].economy_sum += sum;
-            curr_menu = Menu::DONE;
+            curr_menu = Menu::TRANSACTION_DONE;
         } else {
             curr_menu = Menu::NO_FUNDS;
         }
-    } else if (enter_sum_type == EnterSum::ECO_TO_MAIN) {
+    }
+    else if (enter_sum_type == EnterSum::ECO_TO_MAIN) {
         apply_interest(users[logged_user]);
 
         if (users[logged_user].economy_sum >= (float)sum) {
             users[logged_user].economy_sum -= sum;
             users[logged_user].checking_sum += sum;
-            curr_menu = Menu::DONE;
+            curr_menu = Menu::TRANSACTION_DONE;
         } else {
             curr_menu = Menu::NO_FUNDS;
         }
-    } else {
-        // enter_sum_type == PAY
+    }
+    else if (enter_sum_type ==  EnterSum::PAY) {
         if (users[logged_user].checking_sum >= sum) {
             users[logged_user].checking_sum -= sum;
-            curr_menu = Menu::DONE;
+            curr_menu = Menu::TRANSACTION_DONE;
         } else {
             curr_menu = Menu::NO_FUNDS;
         }
+    }
+    else if (enter_sum_type == EnterSum::SEND_FRIEND) {
+        if (users[logged_user].checking_sum >= sum) {
+            users[logged_user].checking_sum -= sum;
+            users[friend_to_send_money].checking_sum += sum;
+            curr_menu = Menu::TRANSACTION_DONE;
+        } else {
+            curr_menu = Menu::NO_FUNDS;
+        }
+    }
+    else {
+        // Should never be reached.
+        enter_sum_type = EnterSum::NO_ENTER;
+        curr_menu = Menu::ERROR;
     }
 }
 
 
 /*=====================================================================================*/
-/* DONE menu */
-void MENU_DONE_done() {
+/* TRANSACTION_DONE menu */
+void MENU_TRANSACTION_DONE_done() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Done"));
@@ -691,6 +1049,7 @@ void MENU_DONE_done() {
             else if (enter_sum_type == EnterSum::MAIN_TO_ECO) curr_menu = Menu::MAIN_ACC_SUM;
             else if (enter_sum_type == EnterSum::ECO_TO_MAIN) curr_menu = Menu::ECO_ACC_SUM;
             else if (enter_sum_type == EnterSum::PAY) curr_menu = Menu::MAIN_ACC_SUM;
+            else if (enter_sum_type == EnterSum::SEND_FRIEND) curr_menu = Menu::MAIN_ACC_SUM;
 
             enter_sum_type = EnterSum::NO_ENTER;
             return;
@@ -714,6 +1073,7 @@ void MENU_NO_funds() {
             else if (enter_sum_type == EnterSum::MAIN_TO_ECO) curr_menu = Menu::MAIN_ACC_SUM;
             else if (enter_sum_type == EnterSum::ECO_TO_MAIN) curr_menu = Menu::ECO_ACC_SUM;
             else if (enter_sum_type == EnterSum::PAY) curr_menu = Menu::MAIN_ACC_SUM;
+            else if (enter_sum_type == EnterSum::SEND_FRIEND) curr_menu = Menu::MAIN_ACC_SUM;
 
             enter_sum_type = EnterSum::NO_ENTER;
             return;
