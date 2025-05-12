@@ -8,6 +8,10 @@ enum class EnterSum {
     NO_ENTER, ADD_CASH, MAIN_TO_ECO, ECO_TO_MAIN, PAY, SEND_FRIEND
 };
 
+enum class NotifMode {
+    VIEW, ACCEPTED, REJECTED
+};
+
 
 /* MENU CODES */
 enum class Menu {

@@ -47,6 +47,21 @@ bool joystick_to_up() {
 }
 
 
+bool joystick_to_down() {
+    int y_val = analogRead(JOYSTICK_VRY_PIN);
+
+    if (y_val > JOY_DOWN_THRESHOLD) {
+        unsigned long curr_time = millis();
+        if (curr_time - last_joy_delay_time > BETWEEN_MENUS_DELAY) {
+            last_joy_delay_time = curr_time;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 bool is_button_pressed(const int pin, int &last_state, int &stable_state,
                        unsigned long &last_debounce_time) {
     int reading = digitalRead(pin);
@@ -259,13 +274,13 @@ int8_t get_first_friend_candidate(uint8_t logged_user) {
             continue;
         }
         
-        if (!is_user_registered(idx)) {
+        // If not registered, or if already friends, or if a friend request is in progress.
+        if (!is_user_registered(idx) || friendships[logged_user][idx]
+            || sent_friend_req[logged_user][idx] || sent_friend_req[idx][logged_user]) {
             continue;
         }
 
-        if (!friendships[logged_user][idx]) {
-            return idx;
-        }
+        return idx;
     }
 
     return -1;
@@ -278,13 +293,13 @@ uint8_t get_prev_friend_candidate(uint8_t logged_user, uint8_t curr_candidate) {
             continue;
         }
 
-        if (!is_user_registered(idx)) {
+        // If not registered, or if already friends, or if a friend request is in progress.
+        if (!is_user_registered(idx) || friendships[logged_user][idx]
+            || sent_friend_req[logged_user][idx] || sent_friend_req[idx][logged_user]) {
             continue;
         }
 
-        if (!friendships[logged_user][idx]) {
-            return idx;
-        }
+        return idx;
     }
 
     return curr_candidate;
@@ -297,13 +312,13 @@ uint8_t get_next_friend_candidate(uint8_t logged_user, uint8_t curr_candidate) {
             continue;
         }
 
-        if (!is_user_registered(idx)) {
+        // If not registered, or if already friends, or if a friend request is in progress.
+        if (!is_user_registered(idx) || friendships[logged_user][idx]
+            || sent_friend_req[logged_user][idx] || sent_friend_req[idx][logged_user]) {
             continue;
         }
 
-        if (!friendships[logged_user][idx]) {
-            return idx;
-        }
+        return idx;
     }
 
     return curr_candidate;
@@ -330,6 +345,18 @@ void display_notification(Notification &notif) {
         lcd.print(F("from"));
         lcd.setCursor(0, 1);
         lcd.print(names[notif.from_who]);
+    }
+
+    else if (notif.type == NotifType::ReqAccepted) {
+        lcd.print(names[notif.from_who]);
+        lcd.setCursor(0, 1);
+        lcd.print(F("is"));
+        lcd.setCursor(3, 1);
+        lcd.print(F("now"));
+        lcd.setCursor(7, 1);
+        lcd.print(F("a"));
+        lcd.setCursor(9, 1);
+        lcd.print(F("friend"));
     }
 }
 

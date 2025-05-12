@@ -38,7 +38,7 @@ constexpr int RED_BUTTON_PIN = 5;
 /* DATA STRUCTURES */
 
 enum class NotifType {
-    RecvFromFriend, FriendReq
+    RecvFromFriend, FriendReq, ReqAccepted
 };
 
 struct Notification {
@@ -83,6 +83,7 @@ constexpr int BETWEEN_MENUS_DELAY = 400;
 constexpr int JOY_RIGHT_THRESHOLD = 800;
 constexpr int JOY_LEFT_THRESHOLD = 200;
 constexpr int JOY_UP_THRESHOLD = 200;
+constexpr int JOY_DOWN_THRESHOLD = 800;
 
 constexpr int DEBOUNCE_DELAY = 30;
 
@@ -124,6 +125,8 @@ extern volatile uint16_t wdt_counter;
 
 extern bool friendships[MAX_USERS][MAX_USERS];
 
+extern bool sent_friend_req[MAX_USERS][MAX_USERS];
+
 extern int8_t friend_to_send_money;
 
 
@@ -138,6 +141,9 @@ bool joystick_to_the_left();
 
 // Check if the joystick is moved upwards.
 bool joystick_to_up();
+
+// Check if the joystick is moved downwards.
+bool joystick_to_down();
 
 // Check if a button is pressed (with debouncing).
 bool is_button_pressed(const int pin, int &last_state, int &stable_state,
