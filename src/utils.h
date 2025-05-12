@@ -197,6 +197,12 @@ uint8_t get_prev_notification(uint8_t curr_notif);
 // notifications that the user currenlty has.
 uint8_t get_next_notification(uint8_t notif_cnt, uint8_t curr_notif);
 
+// Adds the specified notif to to_who's inbox.
 void add_notification_to_inbox(uint8_t to_who, uint8_t from_who, NotifType type, uint32_t sum);
+
+// Removes the specified notif from logged_user's inbox.
+// Slides the following notifications one place to the left.
+// Returns logged_user's number of notifications left.
+uint8_t mark_notif_as_seen(uint8_t logged_user, uint8_t notif_idx);
 
 #endif

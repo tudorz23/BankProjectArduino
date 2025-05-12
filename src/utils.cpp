@@ -367,3 +367,29 @@ void add_notification_to_inbox(uint8_t to_who, uint8_t from_who, NotifType type,
     // Increment user's notification counter.
     users[to_who].notif_cnt++;
 }
+
+
+uint8_t mark_notif_as_seen(uint8_t logged_user, uint8_t notif_idx) {
+    uint8_t curr_count = users[logged_user].notif_cnt;
+
+    if (curr_count == 0) {
+        return 0;
+    }
+
+    // Remove the notification from the inbox and slide the ones that come
+    // after it one position to the left.
+    for (uint8_t next_idx = notif_idx + 1; next_idx < curr_count; next_idx++) {
+        Notification &curr = users[logged_user].notifications[notif_idx];
+        Notification &next = users[logged_user].notifications[next_idx];
+
+        curr.type = next.type;
+        curr.from_who = next.from_who;
+        curr.sum = next.sum;
+
+        notif_idx++;
+    }
+
+    // Decrement user's notification counter.
+    users[logged_user].notif_cnt--;
+    return curr_count - 1;
+}

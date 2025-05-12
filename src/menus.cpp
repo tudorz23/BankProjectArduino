@@ -1030,6 +1030,28 @@ void MENU_NOTIFICATIONS_see() {
             display_notification(users[logged_user].notifications[curr_notif]);
         }
 
+        // If the joystick button is pressed, mark the notification as seen.
+        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
+                              joy_button_stable_state, last_joy_debounce_time)) {
+            uint8_t left = mark_notif_as_seen(logged_user, curr_notif);
+
+            // If that was the only notification, go to NOTIFICATIONS_NO_NEW menu.
+            if (left == 0) {
+                curr_menu = Menu::NOTIFICATIONS_NO_NEW;
+                return;
+            }
+
+            // If curr_notif was the last, decrement it by 1, else leave it the same.
+            // It can't be the last AND be 0, because that would mean left == 0,
+            // which is treated above.
+            if (curr_notif == left) {
+                curr_notif--;
+            }
+
+            display_notification(users[logged_user].notifications[curr_notif]);
+            continue;
+        }
+
         // If red button is pressed, go to LOGGED_NOTIFS menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
                               red_button_stable_state, last_red_debounce_time)) {
@@ -1122,7 +1144,7 @@ void MENU_ENTER_sum() {
             curr_menu = Menu::TRANSACTION_DONE;
 
             // TODO: Reset friend_to_send_money
-            
+
         } else {
             curr_menu = Menu::NO_FUNDS;
         }
