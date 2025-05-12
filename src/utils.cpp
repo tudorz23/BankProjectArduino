@@ -308,3 +308,62 @@ uint8_t get_next_friend_candidate(uint8_t logged_user, uint8_t curr_candidate) {
 
     return curr_candidate;
 }
+
+
+void display_notification(Notification &notif) {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+
+    if (notif.type == NotifType::RecvFromFriend) {
+        lcd.print(names[notif.from_who]);
+        lcd.setCursor(0, 1);
+        lcd.print(F("sent"));
+        lcd.setCursor(5, 1);
+        lcd.print(notif.sum);
+    }
+
+    else if (notif.type == NotifType::FriendReq) {
+        lcd.print(F("Friend"));
+        lcd.setCursor(7, 0);
+        lcd.print(F("req"));
+        lcd.setCursor(11, 0);
+        lcd.print(F("from"));
+        lcd.setCursor(0, 1);
+        lcd.print(names[notif.from_who]);
+    }
+}
+
+
+uint8_t get_prev_notification(uint8_t curr_notif) {
+    if (curr_notif == 0) {
+        return 0;
+    }
+
+    return curr_notif - 1;
+}
+
+
+uint8_t get_next_notification(uint8_t notif_cnt, uint8_t curr_notif) {
+    if (curr_notif + 1 == notif_cnt) {
+        return curr_notif;
+    }
+
+    return curr_notif + 1;
+}
+
+
+void add_notification_to_inbox(uint8_t to_who, uint8_t from_who, NotifType type, uint32_t sum) {
+    // If the inbox is full, don't add the notification.
+    uint8_t curr_count = users[to_who].notif_cnt;
+
+    if (curr_count == MAX_NOTIFS) {
+        return;
+    }
+
+    users[to_who].notifications[curr_count].type = type;
+    users[to_who].notifications[curr_count].from_who = from_who;
+    users[to_who].notifications[curr_count].sum = sum;
+
+    // Increment user's notification counter.
+    users[to_who].notif_cnt++;
+}

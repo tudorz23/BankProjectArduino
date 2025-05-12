@@ -198,6 +198,9 @@ void loop() {
     case Menu::LOGGED_FRIENDS:
         MENU_LOGGED_friends();
         break;
+    case Menu::LOGGED_NOTIFS:
+        MENU_LOGGED_notifications();
+        break;
 
     // MAIN_ACC menus
     case Menu::MAIN_ACC_SUM:
@@ -248,12 +251,20 @@ void loop() {
         MENU_VIEW_FRIENDS_no_friend();
         break;
 
-    // ADD_FRIENDS menus.
+    // ADD_FRIENDS menus
     case Menu::ADD_FRIENDS:
         MENU_ADD_FRIENDS_add();
         break;
     case Menu::ADD_FRIENDS_NO_CANDIDATE:
         MENU_ADD_FRIENDS_no_candidate();
+        break;
+
+    // NOTIFICATIONS menus
+    case Menu::NOTIFICATIONS_SEE:
+        MENU_NOTIFICATIONS_see();
+        break;
+    case Menu::NOTIFICATIONS_NO_NEW:
+        MENU_NOTIFICATIONS_no_new();
         break;
 
     // ENTER_SUM menu

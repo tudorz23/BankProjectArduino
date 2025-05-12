@@ -340,6 +340,11 @@ void MENU_LOGGED_hello() {
     lcd.print(names[logged_user]);
 
     while (true) {
+        if (joystick_to_the_left()) {
+            curr_menu = Menu::LOGGED_NOTIFS;
+            return;
+        }
+
         if (joystick_to_the_right()) {
             curr_menu = Menu::LOGGED_MAIN_ACC;
             return;
@@ -460,6 +465,43 @@ void MENU_LOGGED_friends() {
         if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
                               joy_button_stable_state, last_joy_debounce_time)) {
             curr_menu = Menu::FRIENDS_SEE;
+            return;
+        }
+
+        // If red button is pressed, go to LOGOUT menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = Menu::LOGGED_LOGOUT;
+            return;
+        }
+    }
+}
+
+
+void MENU_LOGGED_notifications() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Notifications"));
+    lcd.setCursor(0, 1);
+    lcd.print(users[logged_user].notif_cnt);
+    lcd.setCursor(2, 1);
+    lcd.print("waiting");
+
+    while (true) {
+        if (joystick_to_the_right()) {
+            curr_menu = Menu::LOGGED_HELLO;
+            return;
+        }
+
+        // If Joystick button is pressed, access the NOTIFICATIONS menu.
+        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
+                              joy_button_stable_state, last_joy_debounce_time)) {
+            if (users[logged_user].notif_cnt == 0) {
+                curr_menu = Menu::NOTIFICATIONS_NO_NEW;
+            } else {
+                curr_menu = Menu::NOTIFICATIONS_SEE;
+            }
+            
             return;
         }
 
@@ -965,6 +1007,57 @@ void MENU_ADD_FRIENDS_no_candidate() {
 
 
 /*=====================================================================================*/
+/* NOTIFICATIONS menus */
+void MENU_NOTIFICATIONS_see() {
+    if (users[logged_user].notif_cnt == 0) {
+        // No new notifications
+        curr_menu = Menu::NOTIFICATIONS_NO_NEW;
+        return;
+    }
+
+    // Display first notification.
+    int8_t curr_notif = 0;
+    display_notification(users[logged_user].notifications[curr_notif]);
+
+    while (true) {
+        if (joystick_to_the_left()) {
+            curr_notif = get_prev_notification(curr_notif);
+            display_notification(users[logged_user].notifications[curr_notif]);
+        }
+
+        if (joystick_to_the_right()) {
+            curr_notif = get_next_notification(users[logged_user].notif_cnt, curr_notif);
+            display_notification(users[logged_user].notifications[curr_notif]);
+        }
+
+        // If red button is pressed, go to LOGGED_NOTIFS menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = Menu::LOGGED_NOTIFS;
+            return;
+        }
+    }
+}
+
+
+void MENU_NOTIFICATIONS_no_new() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("No new notif"));
+
+    while (true) {
+        // If red button is pressed, go to LOGGED_NOTIFS menu.
+        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
+                              red_button_stable_state, last_red_debounce_time)) {
+            curr_menu = Menu::LOGGED_NOTIFS;
+            return;
+        }
+    }
+}
+
+
+
+/*=====================================================================================*/
 /* ENTER_SUM menu */
 void MENU_ENTER_sum() {
     lcd.clear();
@@ -1021,7 +1114,15 @@ void MENU_ENTER_sum() {
         if (users[logged_user].checking_sum >= sum) {
             users[logged_user].checking_sum -= sum;
             users[friend_to_send_money].checking_sum += sum;
+
+            // Add a notification to the receiver inbox.
+            add_notification_to_inbox(friend_to_send_money, logged_user,
+                                      NotifType::RecvFromFriend, sum);
+
             curr_menu = Menu::TRANSACTION_DONE;
+
+            // TODO: Reset friend_to_send_money
+            
         } else {
             curr_menu = Menu::NO_FUNDS;
         }

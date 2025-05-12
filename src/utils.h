@@ -37,12 +37,16 @@ constexpr int RED_BUTTON_PIN = 5;
 /*=====================================================================================*/
 /* DATA STRUCTURES */
 
+enum class NotifType {
+    RecvFromFriend, FriendReq
+};
+
 struct Notification {
-    uint8_t type;
+    NotifType type;
 
     uint8_t from_who;
 
-    uint16_t sum;
+    uint32_t sum;
 };
 
 constexpr uint8_t MAX_NOTIFS = 4;
@@ -182,5 +186,17 @@ uint8_t get_prev_friend_candidate(uint8_t logged_user, uint8_t curr_candidate);
 
 // Searches for the next friend candidate of the logged_user.
 uint8_t get_next_friend_candidate(uint8_t logged_user, uint8_t curr_candidate);
+
+// DIsplays the notification on the LCD, depending on its type.
+void display_notification(Notification &notif);
+
+// Searches for the previous notification.
+uint8_t get_prev_notification(uint8_t curr_notif);
+
+// Searches for the next notification, where notif_cnt is the total number of
+// notifications that the user currenlty has.
+uint8_t get_next_notification(uint8_t notif_cnt, uint8_t curr_notif);
+
+void add_notification_to_inbox(uint8_t to_who, uint8_t from_who, NotifType type, uint32_t sum);
 
 #endif

@@ -24,7 +24,7 @@ enum class Menu {
 
     // LOGGED menus
     LOGGED_HELLO, LOGGED_MAIN_ACC, LOGGED_ECO_ACC, LOGGED_LOGOUT,
-    LOGGED_FRIENDS,
+    LOGGED_FRIENDS, LOGGED_NOTIFS,
 
     // MAIN_ACC menus
     MAIN_ACC_SUM, MAIN_ACC_ADD, MAIN_ACC_PAY, MAIN_ACC_TO_ECO, MAIN_ACC_SEND_FRIEND,
@@ -43,6 +43,9 @@ enum class Menu {
 
     // ADD_FRIENDS menus
     ADD_FRIENDS, ADD_FRIENDS_NO_CANDIDATE,
+
+    // NOTIFICATIONS menus
+    NOTIFICATIONS_SEE, NOTIFICATIONS_NO_NEW,
 
     // ENTER_SUM menu
     ENTER_SUM,
@@ -98,6 +101,7 @@ void MENU_LOGGED_main_acc();
 void MENU_LOGGED_eco_acc();
 void MENU_LOGGED_logout(); // Alters `logged_user`
 void MENU_LOGGED_friends();
+void MENU_LOGGED_notifications();
 
 
 /*=====================================================================================*/
@@ -137,6 +141,12 @@ void MENU_VIEW_FRIENDS_no_friend();
 /* ADD_FRIENDS menus */
 void MENU_ADD_FRIENDS_add();
 void MENU_ADD_FRIENDS_no_candidate();
+
+
+/*=====================================================================================*/
+/* NOTIFICATIONS menus */
+void MENU_NOTIFICATIONS_see();
+void MENU_NOTIFICATIONS_no_new();
 
 
 /*=====================================================================================*/
