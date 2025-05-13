@@ -1,38 +1,12 @@
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef _UTILS_H_
+#define _UTILS_H_
 
-#include <Arduino.h>
 #include <LiquidCrystal_I2C.h>
 #include <MFRC522.h>
 #include <TTP229.h>
+#include "pins.h"
 
 // #define DEBUG
-
-/* COMPONENT PINS */
-// Card reader
-constexpr int RFID_SDA_PIN = 8;
-constexpr int RFID_RST_PIN = 7;
-
-// Joystick
-constexpr int JOYSTICK_VRX_PIN = A0;
-constexpr int JOYSTICK_VRY_PIN = A1;
-constexpr int JOYSTICK_SW_PIN = A2;
-
-// TTP229 keyboard
-constexpr int TTP_SCL_PIN = 4; // The pin number of the clock pin.
-constexpr int TTP_SDO_PIN = 2; // The pin number of the data pin.
-
-// RGB led
-constexpr int LED_R_PIN = 10;
-constexpr int LED_G_PIN = 9;
-constexpr int LED_B_PIN = 6;
-
-// Buzzer
-constexpr int BUZZER_PIN = 3;
-
-// Red button
-constexpr int RED_BUTTON_PIN = 5;
-
 
 /*=====================================================================================*/
 /* DATA STRUCTURES */
@@ -95,6 +69,9 @@ constexpr uint8_t MAX_SUM_DIGITS = 7;
 
 constexpr uint8_t INTEREST_RATE = 2;
 constexpr uint8_t APPLY_INTEREST_INTERVAL = 15;
+
+constexpr uint32_t INITIAL_CHECKING_SUM = 200;
+constexpr float INITIAL_ECO_SUM = 100.0;
 
 constexpr char BLANK[] = "       ";
 

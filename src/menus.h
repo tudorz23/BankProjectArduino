@@ -1,8 +1,5 @@
-#ifndef MENUS_H
-#define MENUS_H
-
-#include "Arduino.h"
-
+#ifndef _MENUS_H_
+#define _MENUS_H_
 
 enum class EnterSum {
     NO_ENTER, ADD_CASH, MAIN_TO_ECO, ECO_TO_MAIN, PAY, SEND_FRIEND

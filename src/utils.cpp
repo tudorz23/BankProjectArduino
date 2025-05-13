@@ -1,6 +1,5 @@
 #include "utils.h"
 
-
 /* HELPER FUNCTIONS */
 bool joystick_to_the_right() {
     int x_val = analogRead(JOYSTICK_VRX_PIN);
@@ -332,17 +331,12 @@ void display_notification(Notification &notif) {
     if (notif.type == NotifType::RecvFromFriend) {
         lcd.print(names[notif.from_who]);
         lcd.setCursor(0, 1);
-        lcd.print(F("sent"));
-        lcd.setCursor(5, 1);
+        lcd.print(F("sent "));
         lcd.print(notif.sum);
     }
 
     else if (notif.type == NotifType::FriendReq) {
-        lcd.print(F("Friend"));
-        lcd.setCursor(7, 0);
-        lcd.print(F("req"));
-        lcd.setCursor(11, 0);
-        lcd.print(F("from"));
+        lcd.print(F("Friend req from"));
         lcd.setCursor(0, 1);
         lcd.print(names[notif.from_who]);
     }
@@ -350,13 +344,7 @@ void display_notification(Notification &notif) {
     else if (notif.type == NotifType::ReqAccepted) {
         lcd.print(names[notif.from_who]);
         lcd.setCursor(0, 1);
-        lcd.print(F("is"));
-        lcd.setCursor(3, 1);
-        lcd.print(F("now"));
-        lcd.setCursor(7, 1);
-        lcd.print(F("a"));
-        lcd.setCursor(9, 1);
-        lcd.print(F("friend"));
+        lcd.print(F("is now a friend"));
     }
 }
 

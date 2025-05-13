@@ -1,5 +1,6 @@
 #include "menus.h"
 #include "utils.h"
+#include "sounds.h"
 
 /* ERROR menu */
 void MENU_error() {
@@ -200,10 +201,11 @@ void MENU_REGISTER_pin() {
     // PIN introduced successfuly.
     register_user(logged_user);
 
-    users[logged_user].checking_sum = 200;
-    users[logged_user].economy_sum = 100;
+    users[logged_user].checking_sum = INITIAL_CHECKING_SUM;
+    users[logged_user].economy_sum = INITIAL_ECO_SUM;
     users[logged_user].last_interest_update_time = wdt_counter;
     users[logged_user].pin = pin;
+    users[logged_user].notif_cnt = 0;
 
     #ifdef DEBUG
     Serial.println(pin);
@@ -1166,7 +1168,6 @@ void MENU_NOTIFICATIONS_no_new() {
 }
 
 
-
 /*=====================================================================================*/
 /* ENTER_SUM menu */
 void MENU_ENTER_sum() {
@@ -1250,7 +1251,11 @@ void MENU_ENTER_sum() {
 void MENU_TRANSACTION_DONE_done() {
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print(F("Done"));
+    lcd.print(F("Transaction"));
+    lcd.setCursor(0, 1);
+    lcd.print(F("successful"));
+
+    sound_transaction_successful();
 
     while (true) {
         // If red button is pressed, go back to previous menu.
@@ -1274,7 +1279,9 @@ void MENU_TRANSACTION_DONE_done() {
 void MENU_NO_funds() {
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print(F("No funds"));
+    lcd.print(F("Not enough funds"));
+
+    sound_transaction_failed();
 
     while (true) {
         // If red button is pressed, go back to previous menu.
