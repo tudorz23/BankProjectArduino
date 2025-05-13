@@ -54,6 +54,9 @@ volatile uint16_t wdt_counter = 0;
 // frienships[i][j] = true <=> users i and j are friends
 bool friendships[MAX_USERS][MAX_USERS] = { false };
 
+// sent_friend_req[i][j] = true <=> user i sent friend req to user j
+bool sent_friend_req[MAX_USERS][MAX_USERS] = { false };
+
 // To know in the Menu::ENTER_SUM who is the target friend.
 int8_t friend_to_send_money = NO_USER;
 
@@ -198,6 +201,9 @@ void loop() {
     case Menu::LOGGED_FRIENDS:
         MENU_LOGGED_friends();
         break;
+    case Menu::LOGGED_NOTIFS:
+        MENU_LOGGED_notifications();
+        break;
 
     // MAIN_ACC menus
     case Menu::MAIN_ACC_SUM:
@@ -248,12 +254,20 @@ void loop() {
         MENU_VIEW_FRIENDS_no_friend();
         break;
 
-    // ADD_FRIENDS menus.
+    // ADD_FRIENDS menus
     case Menu::ADD_FRIENDS:
         MENU_ADD_FRIENDS_add();
         break;
     case Menu::ADD_FRIENDS_NO_CANDIDATE:
         MENU_ADD_FRIENDS_no_candidate();
+        break;
+
+    // NOTIFICATIONS menus
+    case Menu::NOTIFICATIONS_SEE:
+        MENU_NOTIFICATIONS_see();
+        break;
+    case Menu::NOTIFICATIONS_NO_NEW:
+        MENU_NOTIFICATIONS_no_new();
         break;
 
     // ENTER_SUM menu

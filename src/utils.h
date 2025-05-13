@@ -37,12 +37,16 @@ constexpr int RED_BUTTON_PIN = 5;
 /*=====================================================================================*/
 /* DATA STRUCTURES */
 
+enum class NotifType {
+    RecvFromFriend, FriendReq, ReqAccepted
+};
+
 struct Notification {
-    uint8_t type;
+    NotifType type;
 
     uint8_t from_who;
 
-    uint16_t sum;
+    uint32_t sum;
 };
 
 constexpr uint8_t MAX_NOTIFS = 4;
@@ -79,6 +83,7 @@ constexpr int BETWEEN_MENUS_DELAY = 400;
 constexpr int JOY_RIGHT_THRESHOLD = 800;
 constexpr int JOY_LEFT_THRESHOLD = 200;
 constexpr int JOY_UP_THRESHOLD = 200;
+constexpr int JOY_DOWN_THRESHOLD = 800;
 
 constexpr int DEBOUNCE_DELAY = 30;
 
@@ -120,6 +125,8 @@ extern volatile uint16_t wdt_counter;
 
 extern bool friendships[MAX_USERS][MAX_USERS];
 
+extern bool sent_friend_req[MAX_USERS][MAX_USERS];
+
 extern int8_t friend_to_send_money;
 
 
@@ -134,6 +141,9 @@ bool joystick_to_the_left();
 
 // Check if the joystick is moved upwards.
 bool joystick_to_up();
+
+// Check if the joystick is moved downwards.
+bool joystick_to_down();
 
 // Check if a button is pressed (with debouncing).
 bool is_button_pressed(const int pin, int &last_state, int &stable_state,
@@ -182,5 +192,23 @@ uint8_t get_prev_friend_candidate(uint8_t logged_user, uint8_t curr_candidate);
 
 // Searches for the next friend candidate of the logged_user.
 uint8_t get_next_friend_candidate(uint8_t logged_user, uint8_t curr_candidate);
+
+// DIsplays the notification on the LCD, depending on its type.
+void display_notification(Notification &notif);
+
+// Searches for the previous notification.
+uint8_t get_prev_notification(uint8_t curr_notif);
+
+// Searches for the next notification, where notif_cnt is the total number of
+// notifications that the user currenlty has.
+uint8_t get_next_notification(uint8_t notif_cnt, uint8_t curr_notif);
+
+// Adds the specified notif to to_who's inbox.
+void add_notification_to_inbox(uint8_t to_who, uint8_t from_who, NotifType type, uint32_t sum);
+
+// Removes the specified notif from logged_user's inbox.
+// Slides the following notifications one place to the left.
+// Returns logged_user's number of notifications left.
+uint8_t mark_notif_as_seen(uint8_t logged_user, uint8_t notif_idx);
 
 #endif

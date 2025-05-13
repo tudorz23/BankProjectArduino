@@ -47,6 +47,21 @@ bool joystick_to_up() {
 }
 
 
+bool joystick_to_down() {
+    int y_val = analogRead(JOYSTICK_VRY_PIN);
+
+    if (y_val > JOY_DOWN_THRESHOLD) {
+        unsigned long curr_time = millis();
+        if (curr_time - last_joy_delay_time > BETWEEN_MENUS_DELAY) {
+            last_joy_delay_time = curr_time;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 bool is_button_pressed(const int pin, int &last_state, int &stable_state,
                        unsigned long &last_debounce_time) {
     int reading = digitalRead(pin);
@@ -259,13 +274,13 @@ int8_t get_first_friend_candidate(uint8_t logged_user) {
             continue;
         }
         
-        if (!is_user_registered(idx)) {
+        // If not registered, or if already friends, or if a friend request is in progress.
+        if (!is_user_registered(idx) || friendships[logged_user][idx]
+            || sent_friend_req[logged_user][idx] || sent_friend_req[idx][logged_user]) {
             continue;
         }
 
-        if (!friendships[logged_user][idx]) {
-            return idx;
-        }
+        return idx;
     }
 
     return -1;
@@ -278,13 +293,13 @@ uint8_t get_prev_friend_candidate(uint8_t logged_user, uint8_t curr_candidate) {
             continue;
         }
 
-        if (!is_user_registered(idx)) {
+        // If not registered, or if already friends, or if a friend request is in progress.
+        if (!is_user_registered(idx) || friendships[logged_user][idx]
+            || sent_friend_req[logged_user][idx] || sent_friend_req[idx][logged_user]) {
             continue;
         }
 
-        if (!friendships[logged_user][idx]) {
-            return idx;
-        }
+        return idx;
     }
 
     return curr_candidate;
@@ -297,14 +312,111 @@ uint8_t get_next_friend_candidate(uint8_t logged_user, uint8_t curr_candidate) {
             continue;
         }
 
-        if (!is_user_registered(idx)) {
+        // If not registered, or if already friends, or if a friend request is in progress.
+        if (!is_user_registered(idx) || friendships[logged_user][idx]
+            || sent_friend_req[logged_user][idx] || sent_friend_req[idx][logged_user]) {
             continue;
         }
 
-        if (!friendships[logged_user][idx]) {
-            return idx;
-        }
+        return idx;
     }
 
     return curr_candidate;
+}
+
+
+void display_notification(Notification &notif) {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+
+    if (notif.type == NotifType::RecvFromFriend) {
+        lcd.print(names[notif.from_who]);
+        lcd.setCursor(0, 1);
+        lcd.print(F("sent"));
+        lcd.setCursor(5, 1);
+        lcd.print(notif.sum);
+    }
+
+    else if (notif.type == NotifType::FriendReq) {
+        lcd.print(F("Friend"));
+        lcd.setCursor(7, 0);
+        lcd.print(F("req"));
+        lcd.setCursor(11, 0);
+        lcd.print(F("from"));
+        lcd.setCursor(0, 1);
+        lcd.print(names[notif.from_who]);
+    }
+
+    else if (notif.type == NotifType::ReqAccepted) {
+        lcd.print(names[notif.from_who]);
+        lcd.setCursor(0, 1);
+        lcd.print(F("is"));
+        lcd.setCursor(3, 1);
+        lcd.print(F("now"));
+        lcd.setCursor(7, 1);
+        lcd.print(F("a"));
+        lcd.setCursor(9, 1);
+        lcd.print(F("friend"));
+    }
+}
+
+
+uint8_t get_prev_notification(uint8_t curr_notif) {
+    if (curr_notif == 0) {
+        return 0;
+    }
+
+    return curr_notif - 1;
+}
+
+
+uint8_t get_next_notification(uint8_t notif_cnt, uint8_t curr_notif) {
+    if (curr_notif + 1 == notif_cnt) {
+        return curr_notif;
+    }
+
+    return curr_notif + 1;
+}
+
+
+void add_notification_to_inbox(uint8_t to_who, uint8_t from_who, NotifType type, uint32_t sum) {
+    // If the inbox is full, don't add the notification.
+    uint8_t curr_count = users[to_who].notif_cnt;
+
+    if (curr_count == MAX_NOTIFS) {
+        return;
+    }
+
+    users[to_who].notifications[curr_count].type = type;
+    users[to_who].notifications[curr_count].from_who = from_who;
+    users[to_who].notifications[curr_count].sum = sum;
+
+    // Increment user's notification counter.
+    users[to_who].notif_cnt++;
+}
+
+
+uint8_t mark_notif_as_seen(uint8_t logged_user, uint8_t notif_idx) {
+    uint8_t curr_count = users[logged_user].notif_cnt;
+
+    if (curr_count == 0) {
+        return 0;
+    }
+
+    // Remove the notification from the inbox and slide the ones that come
+    // after it one position to the left.
+    for (uint8_t next_idx = notif_idx + 1; next_idx < curr_count; next_idx++) {
+        Notification &curr = users[logged_user].notifications[notif_idx];
+        Notification &next = users[logged_user].notifications[next_idx];
+
+        curr.type = next.type;
+        curr.from_who = next.from_who;
+        curr.sum = next.sum;
+
+        notif_idx++;
+    }
+
+    // Decrement user's notification counter.
+    users[logged_user].notif_cnt--;
+    return curr_count - 1;
 }
