@@ -5,17 +5,16 @@
 #include "wdt_counter.h"
 
 
-/* HELPER */
-void greet_logged_user() {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print(F("Hello"));
+/* STATIC VARIABLES (private to this file) */
 
-    lcd.setCursor(0, 1);
-    lcd.print(names[logged_user]);
-}
+// Indicates to the Menu::ENTER_SUM what action to perform.
+static EnterSum enter_sum_type = EnterSum::NO_ENTER;
+
+// To know in the Menu::ENTER_SUM who is the target friend (when it is the case).
+static int8_t friend_to_send_money = NO_USER;
 
 
+/*=====================================================================================*/
 /* ERROR menu */
 void MENU_error() {
     lcd.clear();
@@ -1202,6 +1201,12 @@ void MENU_ENTER_sum() {
         }
     }
     else if (enter_sum_type == EnterSum::SEND_FRIEND) {
+        if (friend_to_send_money == NO_USER) {
+            enter_sum_type = EnterSum::NO_ENTER;
+            curr_menu = Menu::ERROR;
+            return;
+        }
+
         if (users[logged_user].checking_sum >= sum) {
             users[logged_user].checking_sum -= sum;
             users[friend_to_send_money].checking_sum += sum;
@@ -1212,7 +1217,7 @@ void MENU_ENTER_sum() {
 
             curr_menu = Menu::TRANSACTION_DONE;
 
-            // TODO: Reset friend_to_send_money
+            // Reset friend_to_send_money
             friend_to_send_money = NO_USER;
 
         } else {
@@ -1290,7 +1295,7 @@ void MENU_DEBUG_wdt() {
     lcd.print(get_wdt_counter());
 
     while (true) {
-        // If the joystick button is pressed, reprint the counter.
+        // If the joystick is pushed up, reprint the counter.
         if (joystick_to_up()) {
             lcd.setCursor(0, 1);
             lcd.print(BLANK);

@@ -63,9 +63,8 @@ enum class Menu {
 };
 
 
-/* GLOBAL VARIABLES */
+/* GLOBAL VARIABLE */
 extern Menu curr_menu;
-extern EnterSum enter_sum_type;
 
 
 /*=====================================================================================*/

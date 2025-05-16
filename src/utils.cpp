@@ -3,7 +3,7 @@
 #include "wdt_counter.h"
 
 
-/* HELPER FUNCTIONS */
+/* FUNCTION DEFINITIONS */
 
 void extract_uid(char *buff) {
     // Read one byte (i.e. 2 hex chars) at a time.
@@ -241,31 +241,6 @@ uint8_t get_next_friend_candidate(uint8_t logged_user, uint8_t curr_candidate) {
 }
 
 
-void display_notification(Notification &notif) {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-
-    if (notif.type == NotifType::RecvFromFriend) {
-        lcd.print(names[notif.from_who]);
-        lcd.setCursor(0, 1);
-        lcd.print(F("sent "));
-        lcd.print(notif.sum);
-    }
-
-    else if (notif.type == NotifType::FriendReq) {
-        lcd.print(F("Friend req from"));
-        lcd.setCursor(0, 1);
-        lcd.print(names[notif.from_who]);
-    }
-
-    else if (notif.type == NotifType::ReqAccepted) {
-        lcd.print(names[notif.from_who]);
-        lcd.setCursor(0, 1);
-        lcd.print(F("is now a friend"));
-    }
-}
-
-
 uint8_t get_prev_notification(uint8_t curr_notif) {
     if (curr_notif == 0) {
         return 0;
@@ -324,4 +299,39 @@ uint8_t mark_notif_as_seen(uint8_t logged_user, uint8_t notif_idx) {
     // Decrement user's notification counter.
     users[logged_user].notif_cnt--;
     return curr_count - 1;
+}
+
+
+void display_notification(Notification &notif) {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+
+    if (notif.type == NotifType::RecvFromFriend) {
+        lcd.print(names[notif.from_who]);
+        lcd.setCursor(0, 1);
+        lcd.print(F("sent "));
+        lcd.print(notif.sum);
+    }
+
+    else if (notif.type == NotifType::FriendReq) {
+        lcd.print(F("Friend req from"));
+        lcd.setCursor(0, 1);
+        lcd.print(names[notif.from_who]);
+    }
+
+    else if (notif.type == NotifType::ReqAccepted) {
+        lcd.print(names[notif.from_who]);
+        lcd.setCursor(0, 1);
+        lcd.print(F("is now a friend"));
+    }
+}
+
+
+void greet_logged_user() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Hello"));
+
+    lcd.setCursor(0, 1);
+    lcd.print(names[logged_user]);
 }

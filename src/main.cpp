@@ -27,12 +27,6 @@ const char *uids[MAX_USERS];
 // Used with bit manipulation (i.e. user i is active -> bit i is 1, else 0).
 uint8_t registered_users = 0;
 
-// The menu currently running.
-Menu curr_menu = Menu::NO_MENU;
-
-// Indicates to the ENTER_MENU what action to perform.
-EnterSum enter_sum_type = EnterSum::NO_ENTER;
-
 // The index of the currently logged-in user (initially nobody).
 int8_t logged_user = NO_USER;
 
@@ -42,8 +36,8 @@ bool friendships[MAX_USERS][MAX_USERS] = { false };
 // sent_friend_req[i][j] = true <=> user i sent friend req to user j
 bool sent_friend_req[MAX_USERS][MAX_USERS] = { false };
 
-// To know in the Menu::ENTER_SUM who is the target friend.
-int8_t friend_to_send_money = NO_USER;
+// The menu currently running.
+Menu curr_menu = Menu::NO_MENU;
 
 
 void init_database() {

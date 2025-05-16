@@ -79,20 +79,16 @@ extern TTP229 ttp229;
 extern User users[MAX_USERS];
 extern const char *names[MAX_USERS];
 extern const char *uids[MAX_USERS];
+
 extern uint8_t registered_users;
 extern int8_t logged_user;
 
-// extern volatile uint16_t wdt_counter;
-
 extern bool friendships[MAX_USERS][MAX_USERS];
-
 extern bool sent_friend_req[MAX_USERS][MAX_USERS];
-
-extern int8_t friend_to_send_money;
 
 
 /*=====================================================================================*/
-/* HELPER FUNCTIONS */
+/* FUNCTION DECLARATIONS */
 
 // Extract the uid from the mfrc522 and save it as a char array,
 // in HEX representation.
@@ -137,9 +133,6 @@ uint8_t get_prev_friend_candidate(uint8_t logged_user, uint8_t curr_candidate);
 // Searches for the next friend candidate of the logged_user.
 uint8_t get_next_friend_candidate(uint8_t logged_user, uint8_t curr_candidate);
 
-// DIsplays the notification on the LCD, depending on its type.
-void display_notification(Notification &notif);
-
 // Searches for the previous notification.
 uint8_t get_prev_notification(uint8_t curr_notif);
 
@@ -154,5 +147,11 @@ void add_notification_to_inbox(uint8_t to_who, uint8_t from_who, NotifType type,
 // Slides the following notifications one place to the left.
 // Returns logged_user's number of notifications left.
 uint8_t mark_notif_as_seen(uint8_t logged_user, uint8_t notif_idx);
+
+// Displays the notification on the LCD, depending on its type.
+void display_notification(Notification &notif);
+
+// Displays a hello message to the logged user.
+void greet_logged_user();
 
 #endif
