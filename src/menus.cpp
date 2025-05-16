@@ -2,6 +2,7 @@
 #include "utils.h"
 #include "debounce.h"
 #include "sounds.h"
+#include "wdt_counter.h"
 
 
 /* HELPER */
@@ -214,7 +215,7 @@ void MENU_REGISTER_pin() {
 
     users[logged_user].checking_sum = INITIAL_CHECKING_SUM;
     users[logged_user].economy_sum = INITIAL_ECO_SUM;
-    users[logged_user].last_interest_update_time = wdt_counter;
+    users[logged_user].last_interest_update_time = get_wdt_counter();
     users[logged_user].pin = pin;
     users[logged_user].notif_cnt = 0;
 
@@ -1172,6 +1173,8 @@ void MENU_ENTER_sum() {
     }
     else if (enter_sum_type == EnterSum::MAIN_TO_ECO) {
         if (users[logged_user].checking_sum >= sum) {
+            apply_interest(users[logged_user]);
+
             users[logged_user].checking_sum -= sum;
             users[logged_user].economy_sum += sum;
             curr_menu = Menu::TRANSACTION_DONE;
@@ -1284,7 +1287,7 @@ void MENU_DEBUG_wdt() {
     lcd.print(F("WDT:"));
 
     lcd.setCursor(0, 1);
-    lcd.print(wdt_counter);
+    lcd.print(get_wdt_counter());
 
     while (true) {
         // If the joystick button is pressed, reprint the counter.
@@ -1292,7 +1295,7 @@ void MENU_DEBUG_wdt() {
             lcd.setCursor(0, 1);
             lcd.print(BLANK);
             lcd.setCursor(0, 1);
-            lcd.print(wdt_counter);
+            lcd.print(get_wdt_counter());
         }
 
         // If the red button is pressed, return to START menu.

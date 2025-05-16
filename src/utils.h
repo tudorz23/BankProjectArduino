@@ -82,7 +82,7 @@ extern const char *uids[MAX_USERS];
 extern uint8_t registered_users;
 extern int8_t logged_user;
 
-extern volatile uint16_t wdt_counter;
+// extern volatile uint16_t wdt_counter;
 
 extern bool friendships[MAX_USERS][MAX_USERS];
 

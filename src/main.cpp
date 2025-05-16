@@ -1,6 +1,6 @@
 #include "utils.h"
 #include "menus.h"
-#include <avr/wdt.h>
+#include "wdt_counter.h"
 
 
 /* DECLARE COMPONENT OBJECTS */ 
@@ -36,10 +36,6 @@ EnterSum enter_sum_type = EnterSum::NO_ENTER;
 // The index of the currently logged-in user (initially nobody).
 int8_t logged_user = NO_USER;
 
-
-// To be incremented by the WDT ISR.
-volatile uint16_t wdt_counter = 0;
-
 // frienships[i][j] = true <=> users i and j are friends
 bool friendships[MAX_USERS][MAX_USERS] = { false };
 
@@ -48,6 +44,7 @@ bool sent_friend_req[MAX_USERS][MAX_USERS] = { false };
 
 // To know in the Menu::ENTER_SUM who is the target friend.
 int8_t friend_to_send_money = NO_USER;
+
 
 void init_database() {
     names[0] = "Lewis Hamilton";
@@ -63,32 +60,6 @@ void init_database() {
     uids[3] = "EECA3200";
     uids[4] = "43293000";
     uids[5] = "C6F04800";
-}
-
-
-// WDT Interrupt Service Routine
-ISR(WDT_vect) {
-    wdt_counter++;
-}
-
-
-// Setup the Watchdog timer to generate an interrupt every 1 second,
-// to manage an interest gain in the economy accounts.
-void watchdog_setup() {
-    // Temporarily disable interrupts
-    cli();
-
-    // CLear Watchdog System Reset Flag
-    MCUSR &= ~(1 << WDRF);
-
-    // Set Watchdog Change Enable and Watchdog System Reset Enable
-    WDTCSR |= (1 << WDCE) | (1 << WDE);
-
-    // Set interrupt mode and set timeout value to 1s
-    WDTCSR = (1 << WDIE) | (1 << WDP2) | (1 << WDP1);
-
-    // Re-enable interrupts.
-    sei();
 }
 
 
@@ -125,11 +96,11 @@ void setup() {
     // Initialize names and UIDs.
     init_database();
 
+    // Initialize the WDT.
+    wdt_init();
+
     // Start from the HELLO menu.
     curr_menu = Menu::START_HELLO;
-
-    // Setup the WDT.
-    watchdog_setup();
 }
 
 

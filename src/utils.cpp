@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "debounce.h"
+#include "wdt_counter.h"
 
 
 /* HELPER FUNCTIONS */
@@ -111,7 +112,7 @@ bool is_user_registered(uint8_t idx) {
 
 void apply_interest(User &user) {
     // The wdt_counter is incremented every 1 second.
-    uint16_t elapsed_time = wdt_counter - user.last_interest_update_time;
+    uint16_t elapsed_time = get_wdt_counter() - user.last_interest_update_time;
 
     #ifdef DEBUG
     Serial.println(user.last_interest_update_time);
