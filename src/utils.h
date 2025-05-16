@@ -6,6 +6,7 @@
 #include <TTP229.h>
 #include "pins.h"
 
+
 // #define DEBUG
 
 /*=====================================================================================*/
@@ -53,14 +54,6 @@ enum class ReadInputType {
 /*=====================================================================================*/
 /* CONSTANTS */
 
-constexpr int BETWEEN_MENUS_DELAY = 400;
-constexpr int JOY_RIGHT_THRESHOLD = 800;
-constexpr int JOY_LEFT_THRESHOLD = 200;
-constexpr int JOY_UP_THRESHOLD = 200;
-constexpr int JOY_DOWN_THRESHOLD = 800;
-
-constexpr int DEBOUNCE_DELAY = 30;
-
 constexpr int8_t NO_USER = -1;
 constexpr uint8_t MAX_USERS = 6;
 constexpr uint8_t UID_SIZE = 8;
@@ -89,15 +82,6 @@ extern const char *uids[MAX_USERS];
 extern uint8_t registered_users;
 extern int8_t logged_user;
 
-extern unsigned long last_joy_delay_time;
-extern unsigned long last_joy_debounce_time;
-extern unsigned long last_red_debounce_time;
-
-extern int last_joy_button_state;
-extern int joy_button_stable_state;
-extern int last_red_button_state;
-extern int red_button_stable_state;
-
 extern volatile uint16_t wdt_counter;
 
 extern bool friendships[MAX_USERS][MAX_USERS];
@@ -109,23 +93,6 @@ extern int8_t friend_to_send_money;
 
 /*=====================================================================================*/
 /* HELPER FUNCTIONS */
-
-// Check if the joystick is moved to the right.
-bool joystick_to_the_right();
-
-// Check if the joystick is moved to the left.
-bool joystick_to_the_left();
-
-// Check if the joystick is moved upwards.
-bool joystick_to_up();
-
-// Check if the joystick is moved downwards.
-bool joystick_to_down();
-
-// Check if a button is pressed (with debouncing).
-bool is_button_pressed(const int pin, int &last_state, int &stable_state,
-                       unsigned long &last_debounce_time);
-
 
 // Extract the uid from the mfrc522 and save it as a char array,
 // in HEX representation.

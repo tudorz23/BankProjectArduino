@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 
+
 /* COMPONENT PINS */
 // Card reader
 constexpr uint8_t RFID_SDA_PIN = 8;

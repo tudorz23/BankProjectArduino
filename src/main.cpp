@@ -2,6 +2,7 @@
 #include "menus.h"
 #include <avr/wdt.h>
 
+
 /* DECLARE COMPONENT OBJECTS */ 
 // LCD (address 0x27, 16 chars and 2 lines)
 LiquidCrystal_I2C lcd(0x27, 16, 2);
@@ -35,18 +36,6 @@ EnterSum enter_sum_type = EnterSum::NO_ENTER;
 // The index of the currently logged-in user (initially nobody).
 int8_t logged_user = NO_USER;
 
-
-// For joystick delay between levels.
-unsigned long last_joy_delay_time = 0;
-
-// For buttons debouncing.
-unsigned long last_joy_debounce_time = 0;
-unsigned long last_red_debounce_time = 0;
-
-int last_joy_button_state = HIGH;
-int joy_button_stable_state = HIGH;
-int last_red_button_state = HIGH;
-int red_button_stable_state = HIGH;
 
 // To be incremented by the WDT ISR.
 volatile uint16_t wdt_counter = 0;
