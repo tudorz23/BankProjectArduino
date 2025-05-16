@@ -2,11 +2,24 @@
 #include "utils.h"
 #include "sounds.h"
 
+/* HELPER */
+void greet_logged_user() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Hello"));
+
+    lcd.setCursor(0, 1);
+    lcd.print(names[logged_user]);
+}
+
+
 /* ERROR menu */
 void MENU_error() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("ERROR"));
+
+    sound_login_failed();
 
     while (true) {
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
@@ -171,6 +184,8 @@ void MENU_REGISTER_already_reg() {
     lcd.setCursor(0, 1);
     lcd.print(F("registered"));
 
+    sound_login_failed();
+
     while (true) {
         // If red button is pressed, go back to REGISTER SCAN menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
@@ -213,6 +228,8 @@ void MENU_REGISTER_pin() {
     #endif
 
     curr_menu = Menu::LOGGED_HELLO;
+    greet_logged_user();
+    sound_login_successful();
 }
 
 
@@ -278,6 +295,8 @@ void MENU_LOGIN_not_registered() {
     lcd.setCursor(0, 0);
     lcd.print(F("Not registered"));
 
+    sound_login_failed();
+
     while (true) {
         // If red button is pressed, go back to LOGIN_SCAN menu.
         if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
@@ -312,6 +331,8 @@ void MENU_LOGIN_enter_pin() {
     }
 
     curr_menu = Menu::LOGGED_HELLO;
+    greet_logged_user();
+    sound_login_successful();
 }
 
 
@@ -319,6 +340,8 @@ void MENU_LOGIN_wrong_pin() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Wrong PIN"));
+
+    sound_login_failed();
 
     while (true) {
         // If red button is pressed, go back to LOGIN_ENTER_PIN menu.
@@ -334,12 +357,7 @@ void MENU_LOGIN_wrong_pin() {
 /*=====================================================================================*/
 /* LOGGED menus */
 void MENU_LOGGED_hello() {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print(F("Hello"));
-
-    lcd.setCursor(0, 1);
-    lcd.print(names[logged_user]);
+    greet_logged_user();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -439,6 +457,8 @@ void MENU_LOGGED_logout() {
                               joy_button_stable_state, last_joy_debounce_time)) {
             logged_user = NO_USER;
             curr_menu = Menu::START_HELLO;
+
+            sound_logout();
             return;
         }
 
@@ -488,6 +508,10 @@ void MENU_LOGGED_notifications() {
     lcd.print(users[logged_user].notif_cnt);
     lcd.setCursor(2, 1);
     lcd.print("waiting");
+
+    if (users[logged_user].notif_cnt > 0) {
+        sound_new_notification();
+    }
 
     while (true) {
         if (joystick_to_the_right()) {
