@@ -1,8 +1,7 @@
 #ifndef _DEBOUNCE_H_
 #define _DEBOUNCE_H_
 
-
-// Constants
+/* CONSTANTS */
 constexpr int BETWEEN_MENUS_DELAY = 400;
 constexpr int JOY_RIGHT_THRESHOLD = 800;
 constexpr int JOY_LEFT_THRESHOLD = 200;

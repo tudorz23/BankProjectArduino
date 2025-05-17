@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 
-
 // Setup the Watchdog timer to generate an interrupt every 1 second,
 // to manage an interest gain in the economy accounts.
 void wdt_init();

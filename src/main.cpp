@@ -2,7 +2,6 @@
 #include "menus.h"
 #include "wdt_counter.h"
 
-
 /* DECLARE COMPONENT OBJECTS */ 
 // LCD (address 0x27, 16 chars and 2 lines)
 LiquidCrystal_I2C lcd(0x27, 16, 2);
@@ -17,12 +16,6 @@ TTP229 ttp229(TTP_SCL_PIN, TTP_SDO_PIN);
 /* DECLARE GLOBAL VARIABLES */
 // Pre-defined users.
 User users[MAX_USERS];
-
-// users[idx] has names[idx] name.
-const char *names[MAX_USERS];
-
-// users[idx] has uids[idx] uid.
-const char *uids[MAX_USERS];
 
 // Used with bit manipulation (i.e. user i is active -> bit i is 1, else 0).
 uint8_t registered_users = 0;
@@ -41,19 +34,19 @@ Menu curr_menu = Menu::NO_MENU;
 
 
 void init_database() {
-    names[0] = "Lewis Hamilton";
-    names[1] = "Charles Leclerc";
-    names[2] = "Oscar Piastri";
-    names[3] = "Leo Messi";
-    names[4] = "Roger Federer";
-    names[5] = "Lamine Yamal";
+    users[0].name = "Lewis Hamilton";
+    users[1].name = "Charles Leclerc";
+    users[2].name = "Oscar Piastri";
+    users[3].name = "Leo Messi";
+    users[4].name = "Roger Federer";
+    users[5].name = "Lamine Yamal";
 
-    uids[0] = "3733EF00";
-    uids[1] = "3DD84F00";
-    uids[2] = "9EEA4200";
-    uids[3] = "EECA3200";
-    uids[4] = "43293000";
-    uids[5] = "C6F04800";
+    users[0].uid = "3733EF00";
+    users[1].uid = "3DD84F00";
+    users[2].uid = "9EEA4200";
+    users[3].uid = "EECA3200";
+    users[4].uid = "43293000";
+    users[5].uid = "C6F04800";
 }
 
 

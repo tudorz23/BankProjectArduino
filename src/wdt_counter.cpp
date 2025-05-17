@@ -2,9 +2,9 @@
 #include <Arduino.h>
 #include <avr/wdt.h>
 
-
 // To be incremented by the WDT ISR (private to this file).
 static volatile uint16_t wdt_counter = 0;
+
 
 // WDT Interrupt Service Routine
 ISR(WDT_vect) {

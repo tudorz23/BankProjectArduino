@@ -24,7 +24,7 @@ struct Notification {
     uint32_t sum;
 };
 
-constexpr uint8_t MAX_NOTIFS = 4;
+constexpr uint8_t MAX_NOTIFS = 5;
 
 /* USER STRUCTURE */
 struct User {
@@ -41,8 +41,10 @@ struct User {
     uint16_t pin;
 
     Notification notifications[MAX_NOTIFS];
-
     uint8_t notif_cnt;
+
+    const char* name;
+    const char *uid;
 };
 
 
@@ -77,9 +79,6 @@ extern MFRC522 mfrc522;
 extern TTP229 ttp229;
 
 extern User users[MAX_USERS];
-extern const char *names[MAX_USERS];
-extern const char *uids[MAX_USERS];
-
 extern uint8_t registered_users;
 extern int8_t logged_user;
 

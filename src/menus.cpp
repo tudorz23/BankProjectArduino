@@ -4,7 +4,6 @@
 #include "sounds.h"
 #include "wdt_counter.h"
 
-
 /* STATIC VARIABLES (private to this file) */
 
 // Indicates to the Menu::ENTER_SUM what action to perform.
@@ -184,9 +183,9 @@ void MENU_REGISTER_already_reg() {
     sound_login_failed();
 
     while (true) {
-        // If red button is pressed, go back to REGISTER SCAN menu.
+        // If red button is pressed, go back to START_REGISTER menu.
         if (is_red_button_pressed()) {
-            curr_menu = Menu::REGISTER_SCAN;
+            curr_menu = Menu::START_REGISTER;
             return;
         }
     }
@@ -293,9 +292,9 @@ void MENU_LOGIN_not_registered() {
     sound_login_failed();
 
     while (true) {
-        // If red button is pressed, go back to LOGIN_SCAN menu.
+        // If red button is pressed, go back to START_LOGIN menu.
         if (is_red_button_pressed()) {
-            curr_menu = Menu::LOGIN_SCAN;
+            curr_menu = Menu::START_LOGIN;
             return;
         }
     }
@@ -375,7 +374,7 @@ void MENU_LOGGED_hello() {
 void MENU_LOGGED_main_acc() {
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print(F("Main acc"));
+    lcd.print(F("Main account"));
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -406,7 +405,7 @@ void MENU_LOGGED_main_acc() {
 void MENU_LOGGED_eco_acc() {
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print(F("Eco acc"));
+    lcd.print(F("Eco account"));
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -736,21 +735,21 @@ void MENU_SEND_FRIEND_choose() {
         return;
     }
 
-    lcd.print(names[curr_friend]);
+    lcd.print(users[curr_friend].name);
 
     while (true) {
         if (joystick_to_the_left()) {
             curr_friend = get_prev_friend(logged_user, curr_friend);
             lcd.clear();
             lcd.setCursor(0, 0);
-            lcd.print(names[curr_friend]);
+            lcd.print(users[curr_friend].name);
         }
 
         if (joystick_to_the_right()) {
             curr_friend = get_next_friend(logged_user, curr_friend);
             lcd.clear();
             lcd.setCursor(0, 0);
-            lcd.print(names[curr_friend]);
+            lcd.print(users[curr_friend].name);
         }
 
         // If the joystick button is pressed, go to ENTER_SUM.
@@ -852,21 +851,21 @@ void MENU_VIEW_FRIENDS_see() {
         return;
     }
 
-    lcd.print(names[curr_friend]);
+    lcd.print(users[curr_friend].name);
 
     while (true) {
         if (joystick_to_the_left()) {
             curr_friend = get_prev_friend(logged_user, curr_friend);
             lcd.clear();
             lcd.setCursor(0, 0);
-            lcd.print(names[curr_friend]);
+            lcd.print(users[curr_friend].name);
         }
 
         if (joystick_to_the_right()) {
             curr_friend = get_next_friend(logged_user, curr_friend);
             lcd.clear();
             lcd.setCursor(0, 0);
-            lcd.print(names[curr_friend]);
+            lcd.print(users[curr_friend].name);
         }
 
         // If red button is pressed, go to FRIENDS_see menu.
@@ -906,7 +905,7 @@ void MENU_ADD_FRIENDS_add() {
         return;
     }
 
-    lcd.print(names[curr_candidate]);
+    lcd.print(users[curr_candidate].name);
 
     bool added_a_friend = false;
 
@@ -918,14 +917,14 @@ void MENU_ADD_FRIENDS_add() {
                 curr_candidate = get_prev_friend_candidate(logged_user, curr_candidate);
                 lcd.clear();
                 lcd.setCursor(0, 0);
-                lcd.print(names[curr_candidate]);
+                lcd.print(users[curr_candidate].name);
             }
 
             if (joystick_to_the_right()) {
                 curr_candidate = get_next_friend_candidate(logged_user, curr_candidate);
                 lcd.clear();
                 lcd.setCursor(0, 0);
-                lcd.print(names[curr_candidate]);
+                lcd.print(users[curr_candidate].name);
             }
 
             // If the joystick button is pressed, send friend request and set added_a_friend to true.
@@ -965,7 +964,7 @@ void MENU_ADD_FRIENDS_add() {
 
                 lcd.clear();
                 lcd.setCursor(0, 0);
-                lcd.print(names[curr_candidate]);
+                lcd.print(users[curr_candidate].name);
 
                 added_a_friend = false;
             }
@@ -1036,7 +1035,7 @@ void MENU_NOTIFICATIONS_see() {
 
                     lcd.clear();
                     lcd.setCursor(0, 0);
-                    lcd.print(names[notif.from_who]);
+                    lcd.print(users[notif.from_who].name);
                     lcd.setCursor(0, 1);
                     lcd.print(F("is now a friend"));
 

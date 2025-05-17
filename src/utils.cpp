@@ -2,7 +2,6 @@
 #include "debounce.h"
 #include "wdt_counter.h"
 
-
 /* FUNCTION DEFINITIONS */
 
 void extract_uid(char *buff) {
@@ -20,7 +19,7 @@ void extract_uid(char *buff) {
 
 int8_t get_user_idx_from_uid(char *uid) {
     for (uint8_t i = 0; i < MAX_USERS; i++) {
-        if (strcmp(uids[i], uid) == 0) {
+        if (strcmp(users[i].uid, uid) == 0) {
             return i;
         }
     }
@@ -307,7 +306,7 @@ void display_notification(Notification &notif) {
     lcd.setCursor(0, 0);
 
     if (notif.type == NotifType::RecvFromFriend) {
-        lcd.print(names[notif.from_who]);
+        lcd.print(users[notif.from_who].name);
         lcd.setCursor(0, 1);
         lcd.print(F("sent "));
         lcd.print(notif.sum);
@@ -316,11 +315,11 @@ void display_notification(Notification &notif) {
     else if (notif.type == NotifType::FriendReq) {
         lcd.print(F("Friend req from"));
         lcd.setCursor(0, 1);
-        lcd.print(names[notif.from_who]);
+        lcd.print(users[notif.from_who].name);
     }
 
     else if (notif.type == NotifType::ReqAccepted) {
-        lcd.print(names[notif.from_who]);
+        lcd.print(users[notif.from_who].name);
         lcd.setCursor(0, 1);
         lcd.print(F("is now a friend"));
     }
@@ -333,5 +332,5 @@ void greet_logged_user() {
     lcd.print(F("Hello"));
 
     lcd.setCursor(0, 1);
-    lcd.print(names[logged_user]);
+    lcd.print(users[logged_user].name);
 }
