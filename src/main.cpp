@@ -1,6 +1,6 @@
 #include "utils.h"
 #include "menus.h"
-#include <avr/wdt.h>
+#include "wdt_counter.h"
 
 /* DECLARE COMPONENT OBJECTS */ 
 // LCD (address 0x27, 16 chars and 2 lines)
@@ -17,39 +17,11 @@ TTP229 ttp229(TTP_SCL_PIN, TTP_SDO_PIN);
 // Pre-defined users.
 User users[MAX_USERS];
 
-// users[idx] has names[idx] name.
-const char *names[MAX_USERS];
-
-// users[idx] has uids[idx] uid.
-const char *uids[MAX_USERS];
-
 // Used with bit manipulation (i.e. user i is active -> bit i is 1, else 0).
 uint8_t registered_users = 0;
 
-// The menu currently running.
-Menu curr_menu = Menu::NO_MENU;
-
-// Indicates to the ENTER_MENU what action to perform.
-EnterSum enter_sum_type = EnterSum::NO_ENTER;
-
 // The index of the currently logged-in user (initially nobody).
 int8_t logged_user = NO_USER;
-
-
-// For joystick delay between levels.
-unsigned long last_joy_delay_time = 0;
-
-// For buttons debouncing.
-unsigned long last_joy_debounce_time = 0;
-unsigned long last_red_debounce_time = 0;
-
-int last_joy_button_state = HIGH;
-int joy_button_stable_state = HIGH;
-int last_red_button_state = HIGH;
-int red_button_stable_state = HIGH;
-
-// To be incremented by the WDT ISR.
-volatile uint16_t wdt_counter = 0;
 
 // frienships[i][j] = true <=> users i and j are friends
 bool friendships[MAX_USERS][MAX_USERS] = { false };
@@ -57,49 +29,24 @@ bool friendships[MAX_USERS][MAX_USERS] = { false };
 // sent_friend_req[i][j] = true <=> user i sent friend req to user j
 bool sent_friend_req[MAX_USERS][MAX_USERS] = { false };
 
-// To know in the Menu::ENTER_SUM who is the target friend.
-int8_t friend_to_send_money = NO_USER;
+// The menu currently running.
+Menu curr_menu = Menu::NO_MENU;
+
 
 void init_database() {
-    names[0] = "Lewis Hamilton";
-    names[1] = "Charles Leclerc";
-    names[2] = "Oscar Piastri";
-    names[3] = "Leo Messi";
-    names[4] = "Roger Federer";
-    names[5] = "Lamine Yamal";
+    users[0].name = "Lewis Hamilton";
+    users[1].name = "Charles Leclerc";
+    users[2].name = "Oscar Piastri";
+    users[3].name = "Leo Messi";
+    users[4].name = "Roger Federer";
+    users[5].name = "Lamine Yamal";
 
-    uids[0] = "3733EF00";
-    uids[1] = "3DD84F00";
-    uids[2] = "9EEA4200";
-    uids[3] = "EECA3200";
-    uids[4] = "43293000";
-    uids[5] = "C6F04800";
-}
-
-
-// WDT Interrupt Service Routine
-ISR(WDT_vect) {
-    wdt_counter++;
-}
-
-
-// Setup the Watchdog timer to generate an interrupt every 1 second,
-// to manage an interest gain in the economy accounts.
-void watchdog_setup() {
-    // Temporarily disable interrupts
-    cli();
-
-    // CLear Watchdog System Reset Flag
-    MCUSR &= ~(1 << WDRF);
-
-    // Set Watchdog Change Enable and Watchdog System Reset Enable
-    WDTCSR |= (1 << WDCE) | (1 << WDE);
-
-    // Set interrupt mode and set timeout value to 1s
-    WDTCSR = (1 << WDIE) | (1 << WDP2) | (1 << WDP1);
-
-    // Re-enable interrupts.
-    sei();
+    users[0].uid = "3733EF00";
+    users[1].uid = "3DD84F00";
+    users[2].uid = "9EEA4200";
+    users[3].uid = "EECA3200";
+    users[4].uid = "43293000";
+    users[5].uid = "C6F04800";
 }
 
 
@@ -136,11 +83,11 @@ void setup() {
     // Initialize names and UIDs.
     init_database();
 
+    // Initialize the WDT.
+    wdt_init();
+
     // Start from the HELLO menu.
     curr_menu = Menu::START_HELLO;
-
-    // Setup the WDT.
-    watchdog_setup();
 }
 
 
@@ -203,6 +150,9 @@ void loop() {
         break;
     case Menu::LOGGED_NOTIFS:
         MENU_LOGGED_notifications();
+        break;
+    case Menu::LOGGED_CHANGE_PIN:
+        MENU_LOGGED_change_pin();
         break;
 
     // MAIN_ACC menus
@@ -268,6 +218,14 @@ void loop() {
         break;
     case Menu::NOTIFICATIONS_NO_NEW:
         MENU_NOTIFICATIONS_no_new();
+        break;
+
+    // CHANGE_PIN menus
+    case Menu::CHANGE_PIN_ENTER:
+        MENU_CHANGE_PIN_enter();
+        break;
+    case Menu::CHANGE_PIN_DONE:
+        MENU_CHANGE_PIN_done();
         break;
 
     // ENTER_SUM menu

@@ -1,8 +1,5 @@
-#ifndef MENUS_H
-#define MENUS_H
-
-#include "Arduino.h"
-
+#ifndef _MENUS_H_
+#define _MENUS_H_
 
 enum class EnterSum {
     NO_ENTER, ADD_CASH, MAIN_TO_ECO, ECO_TO_MAIN, PAY, SEND_FRIEND
@@ -28,7 +25,7 @@ enum class Menu {
 
     // LOGGED menus
     LOGGED_HELLO, LOGGED_MAIN_ACC, LOGGED_ECO_ACC, LOGGED_LOGOUT,
-    LOGGED_FRIENDS, LOGGED_NOTIFS,
+    LOGGED_FRIENDS, LOGGED_NOTIFS, LOGGED_CHANGE_PIN,
 
     // MAIN_ACC menus
     MAIN_ACC_SUM, MAIN_ACC_ADD, MAIN_ACC_PAY, MAIN_ACC_TO_ECO, MAIN_ACC_SEND_FRIEND,
@@ -51,6 +48,9 @@ enum class Menu {
     // NOTIFICATIONS menus
     NOTIFICATIONS_SEE, NOTIFICATIONS_NO_NEW,
 
+    // CHANGE_PIN menus
+    CHANGE_PIN_ENTER, CHANGE_PIN_DONE,
+
     // ENTER_SUM menu
     ENTER_SUM,
 
@@ -65,9 +65,8 @@ enum class Menu {
 };
 
 
-/* GLOBAL VARIABLES */
+/* GLOBAL VARIABLE */
 extern Menu curr_menu;
-extern EnterSum enter_sum_type;
 
 
 /*=====================================================================================*/
@@ -106,6 +105,7 @@ void MENU_LOGGED_eco_acc();
 void MENU_LOGGED_logout(); // Alters `logged_user`
 void MENU_LOGGED_friends();
 void MENU_LOGGED_notifications();
+void MENU_LOGGED_change_pin();
 
 
 /*=====================================================================================*/
@@ -151,6 +151,12 @@ void MENU_ADD_FRIENDS_no_candidate();
 /* NOTIFICATIONS menus */
 void MENU_NOTIFICATIONS_see();
 void MENU_NOTIFICATIONS_no_new();
+
+
+/*=====================================================================================*/
+/* CHANGE_PIN menu */
+void MENU_CHANGE_PIN_enter();
+void MENU_CHANGE_PIN_done();
 
 
 /*=====================================================================================*/

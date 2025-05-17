@@ -1,91 +1,8 @@
 #include "utils.h"
+#include "debounce.h"
+#include "wdt_counter.h"
 
-
-/* HELPER FUNCTIONS */
-bool joystick_to_the_right() {
-    int x_val = analogRead(JOYSTICK_VRX_PIN);
-
-    if (x_val > JOY_RIGHT_THRESHOLD) {
-        unsigned long curr_time = millis();
-        if (curr_time - last_joy_delay_time > BETWEEN_MENUS_DELAY) {
-            last_joy_delay_time = curr_time;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-
-bool joystick_to_the_left() {
-    int x_val = analogRead(JOYSTICK_VRX_PIN);
-
-    if (x_val < JOY_LEFT_THRESHOLD) {
-        unsigned long curr_time = millis();
-        if (curr_time - last_joy_delay_time > BETWEEN_MENUS_DELAY) {
-            last_joy_delay_time = curr_time;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-
-bool joystick_to_up() {
-    int y_val = analogRead(JOYSTICK_VRY_PIN);
-
-    if (y_val < JOY_UP_THRESHOLD) {
-        unsigned long curr_time = millis();
-        if (curr_time - last_joy_delay_time > BETWEEN_MENUS_DELAY) {
-            last_joy_delay_time = curr_time;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-
-bool joystick_to_down() {
-    int y_val = analogRead(JOYSTICK_VRY_PIN);
-
-    if (y_val > JOY_DOWN_THRESHOLD) {
-        unsigned long curr_time = millis();
-        if (curr_time - last_joy_delay_time > BETWEEN_MENUS_DELAY) {
-            last_joy_delay_time = curr_time;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-
-bool is_button_pressed(const int pin, int &last_state, int &stable_state,
-                       unsigned long &last_debounce_time) {
-    int reading = digitalRead(pin);
-
-    if (reading != last_state) {
-        last_debounce_time = millis();
-    }
-
-    last_state = reading;
-
-    if ((millis() - last_debounce_time) > DEBOUNCE_DELAY) {
-        // Check if the button state has changed (since the last stable state)
-        if (reading != stable_state) {
-            stable_state = reading;
-
-            if (stable_state == LOW) {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
+/* FUNCTION DEFINITIONS */
 
 void extract_uid(char *buff) {
     // Read one byte (i.e. 2 hex chars) at a time.
@@ -102,7 +19,7 @@ void extract_uid(char *buff) {
 
 int8_t get_user_idx_from_uid(char *uid) {
     for (uint8_t i = 0; i < MAX_USERS; i++) {
-        if (strcmp(uids[i], uid) == 0) {
+        if (strcmp(users[i].uid, uid) == 0) {
             return i;
         }
     }
@@ -122,14 +39,12 @@ uint32_t read_number_input(ReadInputType type) {
 
     while (true) {
         // If red button is pressed ,return 0 to signal abort.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             return 0;
         }
 
         // If joystick button is pressed.
-        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
-                              joy_button_stable_state, last_joy_debounce_time)) {
+        if (is_joy_button_pressed()) {
             if (type == ReadInputType::PIN && idx == PIN_SIZE) {
                 return number;
             }
@@ -196,12 +111,7 @@ bool is_user_registered(uint8_t idx) {
 
 void apply_interest(User &user) {
     // The wdt_counter is incremented every 1 second.
-    uint16_t elapsed_time = wdt_counter - user.last_interest_update_time;
-
-    #ifdef DEBUG
-    Serial.println(user.last_interest_update_time);
-    Serial.println(elapsed_time);
-    #endif
+    uint16_t elapsed_time = get_wdt_counter() - user.last_interest_update_time;
 
     // The interest is applied every APPLY_INTEREST_INTERVAL seconds.
     uint8_t times_to_apply = elapsed_time / APPLY_INTEREST_INTERVAL;
@@ -213,12 +123,6 @@ void apply_interest(User &user) {
 
     // Last update basically happened at last_time + times_to_apply * INTERVAL.
     user.last_interest_update_time += times_to_apply * APPLY_INTEREST_INTERVAL;
-
-    #ifdef DEBUG
-    Serial.println(user.last_interest_update_time);
-
-    Serial.println();
-    #endif
 }
 
 
@@ -325,42 +229,6 @@ uint8_t get_next_friend_candidate(uint8_t logged_user, uint8_t curr_candidate) {
 }
 
 
-void display_notification(Notification &notif) {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-
-    if (notif.type == NotifType::RecvFromFriend) {
-        lcd.print(names[notif.from_who]);
-        lcd.setCursor(0, 1);
-        lcd.print(F("sent"));
-        lcd.setCursor(5, 1);
-        lcd.print(notif.sum);
-    }
-
-    else if (notif.type == NotifType::FriendReq) {
-        lcd.print(F("Friend"));
-        lcd.setCursor(7, 0);
-        lcd.print(F("req"));
-        lcd.setCursor(11, 0);
-        lcd.print(F("from"));
-        lcd.setCursor(0, 1);
-        lcd.print(names[notif.from_who]);
-    }
-
-    else if (notif.type == NotifType::ReqAccepted) {
-        lcd.print(names[notif.from_who]);
-        lcd.setCursor(0, 1);
-        lcd.print(F("is"));
-        lcd.setCursor(3, 1);
-        lcd.print(F("now"));
-        lcd.setCursor(7, 1);
-        lcd.print(F("a"));
-        lcd.setCursor(9, 1);
-        lcd.print(F("friend"));
-    }
-}
-
-
 uint8_t get_prev_notification(uint8_t curr_notif) {
     if (curr_notif == 0) {
         return 0;
@@ -419,4 +287,39 @@ uint8_t mark_notif_as_seen(uint8_t logged_user, uint8_t notif_idx) {
     // Decrement user's notification counter.
     users[logged_user].notif_cnt--;
     return curr_count - 1;
+}
+
+
+void display_notification(Notification &notif) {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+
+    if (notif.type == NotifType::RecvFromFriend) {
+        lcd.print(users[notif.from_who].name);
+        lcd.setCursor(0, 1);
+        lcd.print(F("sent "));
+        lcd.print(notif.sum);
+    }
+
+    else if (notif.type == NotifType::FriendReq) {
+        lcd.print(F("Friend req from"));
+        lcd.setCursor(0, 1);
+        lcd.print(users[notif.from_who].name);
+    }
+
+    else if (notif.type == NotifType::ReqAccepted) {
+        lcd.print(users[notif.from_who].name);
+        lcd.setCursor(0, 1);
+        lcd.print(F("is now a friend"));
+    }
+}
+
+
+void greet_logged_user() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Hello"));
+
+    lcd.setCursor(0, 1);
+    lcd.print(users[logged_user].name);
 }

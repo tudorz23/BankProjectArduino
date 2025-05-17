@@ -1,37 +1,10 @@
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef _UTILS_H_
+#define _UTILS_H_
 
-#include <Arduino.h>
 #include <LiquidCrystal_I2C.h>
 #include <MFRC522.h>
 #include <TTP229.h>
-
-// #define DEBUG
-
-/* COMPONENT PINS */
-// Card reader
-constexpr int RFID_SDA_PIN = 8;
-constexpr int RFID_RST_PIN = 7;
-
-// Joystick
-constexpr int JOYSTICK_VRX_PIN = A0;
-constexpr int JOYSTICK_VRY_PIN = A1;
-constexpr int JOYSTICK_SW_PIN = A2;
-
-// TTP229 keyboard
-constexpr int TTP_SCL_PIN = 4; // The pin number of the clock pin.
-constexpr int TTP_SDO_PIN = 2; // The pin number of the data pin.
-
-// RGB led
-constexpr int LED_R_PIN = 10;
-constexpr int LED_G_PIN = 9;
-constexpr int LED_B_PIN = 6;
-
-// Buzzer
-constexpr int BUZZER_PIN = 3;
-
-// Red button
-constexpr int RED_BUTTON_PIN = 5;
+#include "pins.h"
 
 
 /*=====================================================================================*/
@@ -49,7 +22,7 @@ struct Notification {
     uint32_t sum;
 };
 
-constexpr uint8_t MAX_NOTIFS = 4;
+constexpr uint8_t MAX_NOTIFS = 5;
 
 /* USER STRUCTURE */
 struct User {
@@ -66,8 +39,10 @@ struct User {
     uint16_t pin;
 
     Notification notifications[MAX_NOTIFS];
-
     uint8_t notif_cnt;
+
+    const char* name;
+    const char *uid;
 };
 
 
@@ -79,14 +54,6 @@ enum class ReadInputType {
 /*=====================================================================================*/
 /* CONSTANTS */
 
-constexpr int BETWEEN_MENUS_DELAY = 400;
-constexpr int JOY_RIGHT_THRESHOLD = 800;
-constexpr int JOY_LEFT_THRESHOLD = 200;
-constexpr int JOY_UP_THRESHOLD = 200;
-constexpr int JOY_DOWN_THRESHOLD = 800;
-
-constexpr int DEBOUNCE_DELAY = 30;
-
 constexpr int8_t NO_USER = -1;
 constexpr uint8_t MAX_USERS = 6;
 constexpr uint8_t UID_SIZE = 8;
@@ -95,6 +62,9 @@ constexpr uint8_t MAX_SUM_DIGITS = 7;
 
 constexpr uint8_t INTEREST_RATE = 2;
 constexpr uint8_t APPLY_INTEREST_INTERVAL = 15;
+
+constexpr uint32_t INITIAL_CHECKING_SUM = 200;
+constexpr float INITIAL_ECO_SUM = 100.0;
 
 constexpr char BLANK[] = "       ";
 
@@ -107,48 +77,15 @@ extern MFRC522 mfrc522;
 extern TTP229 ttp229;
 
 extern User users[MAX_USERS];
-extern const char *names[MAX_USERS];
-extern const char *uids[MAX_USERS];
 extern uint8_t registered_users;
 extern int8_t logged_user;
 
-extern unsigned long last_joy_delay_time;
-extern unsigned long last_joy_debounce_time;
-extern unsigned long last_red_debounce_time;
-
-extern int last_joy_button_state;
-extern int joy_button_stable_state;
-extern int last_red_button_state;
-extern int red_button_stable_state;
-
-extern volatile uint16_t wdt_counter;
-
 extern bool friendships[MAX_USERS][MAX_USERS];
-
 extern bool sent_friend_req[MAX_USERS][MAX_USERS];
-
-extern int8_t friend_to_send_money;
 
 
 /*=====================================================================================*/
-/* HELPER FUNCTIONS */
-
-// Check if the joystick is moved to the right.
-bool joystick_to_the_right();
-
-// Check if the joystick is moved to the left.
-bool joystick_to_the_left();
-
-// Check if the joystick is moved upwards.
-bool joystick_to_up();
-
-// Check if the joystick is moved downwards.
-bool joystick_to_down();
-
-// Check if a button is pressed (with debouncing).
-bool is_button_pressed(const int pin, int &last_state, int &stable_state,
-                       unsigned long &last_debounce_time);
-
+/* FUNCTION DECLARATIONS */
 
 // Extract the uid from the mfrc522 and save it as a char array,
 // in HEX representation.
@@ -193,9 +130,6 @@ uint8_t get_prev_friend_candidate(uint8_t logged_user, uint8_t curr_candidate);
 // Searches for the next friend candidate of the logged_user.
 uint8_t get_next_friend_candidate(uint8_t logged_user, uint8_t curr_candidate);
 
-// DIsplays the notification on the LCD, depending on its type.
-void display_notification(Notification &notif);
-
 // Searches for the previous notification.
 uint8_t get_prev_notification(uint8_t curr_notif);
 
@@ -210,5 +144,11 @@ void add_notification_to_inbox(uint8_t to_who, uint8_t from_who, NotifType type,
 // Slides the following notifications one place to the left.
 // Returns logged_user's number of notifications left.
 uint8_t mark_notif_as_seen(uint8_t logged_user, uint8_t notif_idx);
+
+// Displays the notification on the LCD, depending on its type.
+void display_notification(Notification &notif);
+
+// Displays a hello message to the logged user.
+void greet_logged_user();
 
 #endif

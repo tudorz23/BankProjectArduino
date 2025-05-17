@@ -1,15 +1,34 @@
 #include "menus.h"
 #include "utils.h"
+#include "debounce.h"
+#include "sounds.h"
+#include "wdt_counter.h"
+#include "lights.h"
 
+/* STATIC VARIABLES (private to this file) */
+
+// Indicates to the Menu::ENTER_SUM what action to perform.
+static EnterSum enter_sum_type = EnterSum::NO_ENTER;
+
+// To know in the Menu::ENTER_SUM who is the target friend (when it is the case).
+static int8_t friend_to_send_money = NO_USER;
+
+// To know if the greeting message should be displayed in Menu::LOGGED_HELLO.
+static bool refresh_logged_hello = true;
+
+
+/*=====================================================================================*/
 /* ERROR menu */
 void MENU_error() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("ERROR"));
 
+    set_color_red();
+    sound_login_failed();
+
     while (true) {
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::START_HELLO;
             return;
         }
@@ -23,6 +42,7 @@ void MENU_START_hello() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Welcome!"));
+    set_color_green();
 
     while (true) {
         if (joystick_to_the_right()) {
@@ -37,6 +57,7 @@ void MENU_START_login() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Login"));
+    set_color_green();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -50,8 +71,7 @@ void MENU_START_login() {
         }
 
         // If Joystick button is pressed, access the LOGIN menu.
-        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
-                              joy_button_stable_state, last_joy_debounce_time)) {
+        if (is_joy_button_pressed()) {
             curr_menu = Menu::LOGIN_SCAN;
             return;
         }
@@ -63,6 +83,7 @@ void MENU_START_register() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Register"));
+    set_color_green();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -76,8 +97,7 @@ void MENU_START_register() {
         }
 
         // If Joystick button is pressed, access the REGISTER menu.
-        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
-                              joy_button_stable_state, last_joy_debounce_time)) {
+        if (is_joy_button_pressed()) {
             curr_menu = Menu::REGISTER_SCAN;
             return;
         }
@@ -89,6 +109,7 @@ void MENU_START_debug() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Debug"));
+    set_color_green();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -97,8 +118,7 @@ void MENU_START_debug() {
         }
 
         // If Joystick button is pressed, access the DEBUG menu.
-        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
-                              joy_button_stable_state, last_joy_debounce_time)) {
+        if (is_joy_button_pressed()) {
             curr_menu = Menu::DEBUG_WDT;
             return;
         }
@@ -112,11 +132,11 @@ void MENU_REGISTER_scan() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Scan card"));
+    set_color_purple();
 
     while (true) {
         // If red button is pressed, abort scanning and go back to START menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::START_REGISTER;
             return;
         }
@@ -134,10 +154,6 @@ void MENU_REGISTER_scan() {
         char uid[UID_SIZE + 1];
         extract_uid(uid);
 
-        #ifdef DEBUG
-        Serial.println(uid);
-        #endif
-
         logged_user = get_user_idx_from_uid(uid);
         if (logged_user == NO_USER) {
             curr_menu = Menu::ERROR;
@@ -150,12 +166,6 @@ void MENU_REGISTER_scan() {
             curr_menu = Menu::REGISTER_ALREADY_REG;
             return;
         }
-
-        #ifdef DEBUG
-        Serial.println(logged_user);
-        Serial.println(names[logged_user]);
-        Serial.println();
-        #endif
 
         curr_menu = Menu::REGISTER_PIN;
         return;
@@ -170,11 +180,13 @@ void MENU_REGISTER_already_reg() {
     lcd.setCursor(0, 1);
     lcd.print(F("registered"));
 
+    set_color_red();
+    sound_login_failed();
+
     while (true) {
-        // If red button is pressed, go back to REGISTER SCAN menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = Menu::REGISTER_SCAN;
+        // If red button is pressed, go back to START_REGISTER menu.
+        if (is_red_button_pressed()) {
+            curr_menu = Menu::START_REGISTER;
             return;
         }
     }
@@ -185,6 +197,7 @@ void MENU_REGISTER_pin() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Enter PIN:"));
+    set_color_purple();
 
     // For safety reasons, read to a uint32_t
     uint32_t pin_big = read_number_input(ReadInputType::PIN);
@@ -200,17 +213,17 @@ void MENU_REGISTER_pin() {
     // PIN introduced successfuly.
     register_user(logged_user);
 
-    users[logged_user].checking_sum = 200;
-    users[logged_user].economy_sum = 100;
-    users[logged_user].last_interest_update_time = wdt_counter;
+    users[logged_user].checking_sum = INITIAL_CHECKING_SUM;
+    users[logged_user].economy_sum = INITIAL_ECO_SUM;
+    users[logged_user].last_interest_update_time = get_wdt_counter();
     users[logged_user].pin = pin;
-
-    #ifdef DEBUG
-    Serial.println(pin);
-    Serial.println();
-    #endif
+    users[logged_user].notif_cnt = 0;
 
     curr_menu = Menu::LOGGED_HELLO;
+    greet_logged_user();
+    set_color_yellow();
+    sound_login_successful();
+    refresh_logged_hello = false;
 }
 
 
@@ -220,11 +233,11 @@ void MENU_LOGIN_scan() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Scan card"));
+    set_color_blue();
 
     while (true) {
         // If red button is pressed, abort scanning and go back to START menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::START_LOGIN;
             return;
         }
@@ -242,21 +255,11 @@ void MENU_LOGIN_scan() {
         char uid[UID_SIZE + 1];
         extract_uid(uid);
 
-        #ifdef DEBUG
-        Serial.println(uid);
-        #endif
-
         logged_user = get_user_idx_from_uid(uid);
         if (logged_user == NO_USER) {
             curr_menu = Menu::ERROR;
             return;
         }
-
-        #ifdef DEBUG
-        Serial.println(logged_user);
-        Serial.println(names[logged_user]);
-        Serial.println();
-        #endif
 
         // Check if the user is registered.
         if (!is_user_registered(logged_user)) {
@@ -276,11 +279,13 @@ void MENU_LOGIN_not_registered() {
     lcd.setCursor(0, 0);
     lcd.print(F("Not registered"));
 
+    set_color_red();
+    sound_login_failed();
+
     while (true) {
-        // If red button is pressed, go back to LOGIN_SCAN menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
-            curr_menu = Menu::LOGIN_SCAN;
+        // If red button is pressed, go back to START_LOGIN menu.
+        if (is_red_button_pressed()) {
+            curr_menu = Menu::START_LOGIN;
             return;
         }
     }
@@ -291,6 +296,7 @@ void MENU_LOGIN_enter_pin() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Enter PIN:"));
+    set_color_blue();
 
     // For safety reasons, read to a uint32_t
     uint32_t pin_big = read_number_input(ReadInputType::PIN);
@@ -310,6 +316,10 @@ void MENU_LOGIN_enter_pin() {
     }
 
     curr_menu = Menu::LOGGED_HELLO;
+    greet_logged_user();
+    set_color_yellow();
+    sound_login_successful();
+    refresh_logged_hello = false;
 }
 
 
@@ -318,10 +328,12 @@ void MENU_LOGIN_wrong_pin() {
     lcd.setCursor(0, 0);
     lcd.print(F("Wrong PIN"));
 
+    set_color_red();
+    sound_login_failed();
+
     while (true) {
         // If red button is pressed, go back to LOGIN_ENTER_PIN menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::LOGIN_ENTER_PIN;
             return;
         }
@@ -332,13 +344,18 @@ void MENU_LOGIN_wrong_pin() {
 /*=====================================================================================*/
 /* LOGGED menus */
 void MENU_LOGGED_hello() {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print(F("Hello"));
+    if (logged_user == NO_USER) {
+        curr_menu = Menu::ERROR;
+        return;
+    }
 
-    lcd.setCursor(0, 1);
-    lcd.print(names[logged_user]);
-
+    if (refresh_logged_hello) {
+        set_color_yellow();
+        greet_logged_user();
+    } else {
+        refresh_logged_hello = true;
+    }
+    
     while (true) {
         if (joystick_to_the_left()) {
             curr_menu = Menu::LOGGED_NOTIFS;
@@ -351,8 +368,7 @@ void MENU_LOGGED_hello() {
         }
 
         // If red button is pressed, go to LOGOUT menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::LOGGED_LOGOUT;
             return;
         }
@@ -363,7 +379,8 @@ void MENU_LOGGED_hello() {
 void MENU_LOGGED_main_acc() {
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print(F("Main acc"));
+    lcd.print(F("Main account"));
+    set_color_yellow();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -377,15 +394,13 @@ void MENU_LOGGED_main_acc() {
         }
 
         // If Joystick button is pressed, access the MAIN_ACC menu.
-        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
-                              joy_button_stable_state, last_joy_debounce_time)) {
+        if (is_joy_button_pressed()) {
             curr_menu = Menu::MAIN_ACC_SUM;
             return;
         }
 
         // If red button is pressed, go to LOGOUT menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::LOGGED_LOGOUT;
             return;
         }
@@ -396,7 +411,8 @@ void MENU_LOGGED_main_acc() {
 void MENU_LOGGED_eco_acc() {
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print(F("Eco acc"));
+    lcd.print(F("Eco account"));
+    set_color_yellow();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -410,15 +426,13 @@ void MENU_LOGGED_eco_acc() {
         }
 
         // If Joystick button is pressed, access the ECO_ACC menu.
-        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
-                              joy_button_stable_state, last_joy_debounce_time)) {
+        if (is_joy_button_pressed()) {
             curr_menu = Menu::ECO_ACC_SUM;
             return;
         }
 
         // If red button is pressed, go to LOGOUT menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::LOGGED_LOGOUT;
             return;
         }
@@ -430,19 +444,20 @@ void MENU_LOGGED_logout() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Surely logout?"));
+    set_color_red();
 
     while (true) {
         // If the joystick button is pressed, confirm the logout.
-        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
-                              joy_button_stable_state, last_joy_debounce_time)) {
+        if (is_joy_button_pressed()) {
             logged_user = NO_USER;
             curr_menu = Menu::START_HELLO;
+
+            sound_logout();
             return;
         }
 
         // If the red button is pressed, cancel the logout.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::LOGGED_HELLO;
             return;
         }
@@ -454,6 +469,7 @@ void MENU_LOGGED_friends() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Friends"));
+    set_color_yellow();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -461,16 +477,19 @@ void MENU_LOGGED_friends() {
             return;
         }
 
+        if (joystick_to_the_right()) {
+            curr_menu = Menu::LOGGED_CHANGE_PIN;
+            return;
+        }
+
         // If Joystick button is pressed, access the FRIENDS menu.
-        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
-                              joy_button_stable_state, last_joy_debounce_time)) {
+        if (is_joy_button_pressed()) {
             curr_menu = Menu::FRIENDS_SEE;
             return;
         }
 
         // If red button is pressed, go to LOGOUT menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::LOGGED_LOGOUT;
             return;
         }
@@ -486,6 +505,11 @@ void MENU_LOGGED_notifications() {
     lcd.print(users[logged_user].notif_cnt);
     lcd.setCursor(2, 1);
     lcd.print("waiting");
+    set_color_yellow();
+
+    if (users[logged_user].notif_cnt > 0) {
+        sound_new_notification();
+    }
 
     while (true) {
         if (joystick_to_the_right()) {
@@ -494,8 +518,7 @@ void MENU_LOGGED_notifications() {
         }
 
         // If Joystick button is pressed, access the NOTIFICATIONS menu.
-        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
-                              joy_button_stable_state, last_joy_debounce_time)) {
+        if (is_joy_button_pressed()) {
             if (users[logged_user].notif_cnt == 0) {
                 curr_menu = Menu::NOTIFICATIONS_NO_NEW;
             } else {
@@ -506,14 +529,39 @@ void MENU_LOGGED_notifications() {
         }
 
         // If red button is pressed, go to LOGOUT menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::LOGGED_LOGOUT;
             return;
         }
     }
 }
 
+
+void MENU_LOGGED_change_pin() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Change PIN"));
+    set_color_yellow();
+
+    while (true) {
+        if (joystick_to_the_left()) {
+            curr_menu = Menu::LOGGED_FRIENDS;
+            return;
+        }
+
+        // If Joystick button is pressed, access the CHANGE_PIN menu.
+        if (is_joy_button_pressed()) {
+            curr_menu = Menu::CHANGE_PIN_ENTER;
+            return;
+        }
+
+        // If red button is pressed, go to LOGOUT menu.
+        if (is_red_button_pressed()) {
+            curr_menu = Menu::LOGGED_LOGOUT;
+            return;
+        }
+    }
+}
 
 /*=====================================================================================*/
 /* MAIN_ACC menus */
@@ -523,6 +571,7 @@ void MENU_MAIN_ACC_sum() {
     lcd.print(F("Main acc sum:"));
     lcd.setCursor(0, 1);
     lcd.print(users[logged_user].checking_sum);
+    set_color_blue();
 
     while (true) {
         if (joystick_to_the_right()) {
@@ -531,8 +580,7 @@ void MENU_MAIN_ACC_sum() {
         }
 
         // If red button is pressed, go to LOGGED_MAIN_ACC menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::LOGGED_MAIN_ACC;
             return;
         }
@@ -544,6 +592,7 @@ void MENU_MAIN_ACC_add() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Add cash"));
+    set_color_blue();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -557,16 +606,14 @@ void MENU_MAIN_ACC_add() {
         }
 
         // If the joystick button is pressed, go to ENTER_SUM.
-        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
-                              joy_button_stable_state, last_joy_debounce_time)) {
+        if (is_joy_button_pressed()) {
             enter_sum_type = EnterSum::ADD_CASH;
             curr_menu = Menu::ENTER_SUM;
             return;
         }
 
         // If red button is pressed, go to LOGGED_MAIN_ACC menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::LOGGED_MAIN_ACC;
             return;
         }
@@ -578,6 +625,7 @@ void MENU_MAIN_ACC_pay() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Pay"));
+    set_color_blue();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -591,16 +639,14 @@ void MENU_MAIN_ACC_pay() {
         }
 
         // If the joystick button is pressed, go to ENTER_SUM.
-        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
-                              joy_button_stable_state, last_joy_debounce_time)) {
+        if (is_joy_button_pressed()) {
             enter_sum_type = EnterSum::PAY;
             curr_menu = Menu::ENTER_SUM;
             return;
         }
 
         // If red button is pressed, go to LOGGED_MAIN_ACC menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::LOGGED_MAIN_ACC;
             return;
         }
@@ -612,6 +658,7 @@ void MENU_MAIN_ACC_to_eco() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("To Eco"));
+    set_color_blue();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -625,16 +672,14 @@ void MENU_MAIN_ACC_to_eco() {
         }
 
         // If the joystick button is pressed, go to ENTER_SUM.
-        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
-                              joy_button_stable_state, last_joy_debounce_time)) {
+        if (is_joy_button_pressed()) {
             enter_sum_type = EnterSum::MAIN_TO_ECO;
             curr_menu = Menu::ENTER_SUM;
             return;
         }
 
         // If red button is pressed, go to LOGGED_MAIN_ACC menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::LOGGED_MAIN_ACC;
             return;
         }
@@ -646,6 +691,7 @@ void MENU_MAIN_ACC_send_friend() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Send to friend"));
+    set_color_blue();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -654,15 +700,13 @@ void MENU_MAIN_ACC_send_friend() {
         }
 
         // If the joystick button is pressed, go to SEND_FRIEND_choose.
-        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
-                              joy_button_stable_state, last_joy_debounce_time)) {
+        if (is_joy_button_pressed()) {
             curr_menu = Menu::SEND_FRIEND_CHOOSE;
             return;
         }
 
         // If red button is pressed, go to LOGGED_MAIN_ACC menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::LOGGED_MAIN_ACC;
             return;
         }
@@ -677,6 +721,7 @@ void MENU_ECO_ACC_sum() {
     lcd.setCursor(0, 0);
     lcd.print(F("Eco acc sum:"));
     lcd.setCursor(0, 1);
+    set_color_green();
 
     // Add interest to the economy sum.
     apply_interest(users[logged_user]);
@@ -689,8 +734,7 @@ void MENU_ECO_ACC_sum() {
         }
 
         // If red button is pressed, go to LOGGED_ECO_ACC menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::LOGGED_ECO_ACC;
             return;
         }
@@ -702,6 +746,7 @@ void MENU_ECO_ACC_to_main() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("To Main"));
+    set_color_green();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -710,16 +755,14 @@ void MENU_ECO_ACC_to_main() {
         }
 
         // If the joystick button is pressed, go to ENTER_SUM.
-        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
-                              joy_button_stable_state, last_joy_debounce_time)) {
+        if (is_joy_button_pressed()) {
             enter_sum_type = EnterSum::ECO_TO_MAIN;
             curr_menu = Menu::ENTER_SUM;
             return;
         }
 
         // If red button is pressed, go to LOGGED_ECO_ACC menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::LOGGED_ECO_ACC;
             return;
         }
@@ -740,26 +783,26 @@ void MENU_SEND_FRIEND_choose() {
         return;
     }
 
-    lcd.print(names[curr_friend]);
+    lcd.print(users[curr_friend].name);
+    set_color_purple();
 
     while (true) {
         if (joystick_to_the_left()) {
             curr_friend = get_prev_friend(logged_user, curr_friend);
             lcd.clear();
             lcd.setCursor(0, 0);
-            lcd.print(names[curr_friend]);
+            lcd.print(users[curr_friend].name);
         }
 
         if (joystick_to_the_right()) {
             curr_friend = get_next_friend(logged_user, curr_friend);
             lcd.clear();
             lcd.setCursor(0, 0);
-            lcd.print(names[curr_friend]);
+            lcd.print(users[curr_friend].name);
         }
 
         // If the joystick button is pressed, go to ENTER_SUM.
-        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
-                              joy_button_stable_state, last_joy_debounce_time)) {
+        if (is_joy_button_pressed()) {
             friend_to_send_money = curr_friend;
             enter_sum_type = EnterSum::SEND_FRIEND;
             curr_menu = Menu::ENTER_SUM;
@@ -767,8 +810,7 @@ void MENU_SEND_FRIEND_choose() {
         }
 
         // If red button is pressed, go to MAIN_ACC_SEND_FRIEND menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::MAIN_ACC_SEND_FRIEND;
             return;
         }
@@ -780,11 +822,11 @@ void MENU_SEND_FRIEND_no_friend() {
     lcd.print(F("You have"));
     lcd.setCursor(0, 1);
     lcd.print(F("no friends"));
+    set_color_red();
 
     while (true) {
         // If red button is pressed, go to MAIN_ACC_SEND_FRIEND menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::MAIN_ACC_SEND_FRIEND;
             return;
         }
@@ -798,6 +840,7 @@ void MENU_FRIENDS_see() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("See friends"));
+    set_color_yellow();
 
     while (true) {
         if (joystick_to_the_right()) {
@@ -806,15 +849,13 @@ void MENU_FRIENDS_see() {
         }
 
         // If the joystick button is pressed, go to VIEW_FRIENDS menu.
-        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
-                              joy_button_stable_state, last_joy_debounce_time)) {
+        if (is_joy_button_pressed()) {
             curr_menu = Menu::VIEW_FRIENDS;
             return;
         }
 
         // If red button is pressed, go to LOGGED_FRIENDS menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::LOGGED_FRIENDS;
             return;
         }
@@ -826,6 +867,7 @@ void MENU_FRIENDS_add() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Add friends"));
+    set_color_yellow();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -834,15 +876,13 @@ void MENU_FRIENDS_add() {
         }
 
         // If the joystick button is pressed, go to ADD_FRIENDS menu.
-        if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
-                              joy_button_stable_state, last_joy_debounce_time)) {
+        if (is_joy_button_pressed()) {
             curr_menu = Menu::ADD_FRIENDS;
             return;
         }
 
         // If red button is pressed, go to LOGGED_FRIENDS menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::LOGGED_FRIENDS;
             return;
         }
@@ -863,26 +903,26 @@ void MENU_VIEW_FRIENDS_see() {
         return;
     }
 
-    lcd.print(names[curr_friend]);
+    lcd.print(users[curr_friend].name);
+    set_color_yellow();
 
     while (true) {
         if (joystick_to_the_left()) {
             curr_friend = get_prev_friend(logged_user, curr_friend);
             lcd.clear();
             lcd.setCursor(0, 0);
-            lcd.print(names[curr_friend]);
+            lcd.print(users[curr_friend].name);
         }
 
         if (joystick_to_the_right()) {
             curr_friend = get_next_friend(logged_user, curr_friend);
             lcd.clear();
             lcd.setCursor(0, 0);
-            lcd.print(names[curr_friend]);
+            lcd.print(users[curr_friend].name);
         }
 
         // If red button is pressed, go to FRIENDS_see menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::FRIENDS_SEE;
             return;
         }
@@ -894,11 +934,11 @@ void MENU_VIEW_FRIENDS_no_friend() {
     lcd.print(F("You have"));
     lcd.setCursor(0, 1);
     lcd.print(F("no friends"));
+    set_color_red();
 
     while (true) {
         // If red button is pressed, go to FRIENDS_see menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::FRIENDS_SEE;
             return;
         }
@@ -919,7 +959,8 @@ void MENU_ADD_FRIENDS_add() {
         return;
     }
 
-    lcd.print(names[curr_candidate]);
+    lcd.print(users[curr_candidate].name);
+    set_color_yellow();
 
     bool added_a_friend = false;
 
@@ -931,19 +972,18 @@ void MENU_ADD_FRIENDS_add() {
                 curr_candidate = get_prev_friend_candidate(logged_user, curr_candidate);
                 lcd.clear();
                 lcd.setCursor(0, 0);
-                lcd.print(names[curr_candidate]);
+                lcd.print(users[curr_candidate].name);
             }
 
             if (joystick_to_the_right()) {
                 curr_candidate = get_next_friend_candidate(logged_user, curr_candidate);
                 lcd.clear();
                 lcd.setCursor(0, 0);
-                lcd.print(names[curr_candidate]);
+                lcd.print(users[curr_candidate].name);
             }
 
             // If the joystick button is pressed, send friend request and set added_a_friend to true.
-            if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
-                                joy_button_stable_state, last_joy_debounce_time)) {
+            if (is_joy_button_pressed()) {
                 // Send friend request.
                 add_notification_to_inbox(curr_candidate, logged_user, NotifType::FriendReq, 0);
 
@@ -954,12 +994,13 @@ void MENU_ADD_FRIENDS_add() {
 
                 lcd.setCursor(0, 1);
                 lcd.print("Friend req sent");
+                set_color_green();
+                sound_accept();
                 continue;
             }
 
             // If red button is pressed, go to FRIENDS_add menu.
-            if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                                red_button_stable_state, last_red_debounce_time)) {
+            if (is_red_button_pressed()) {
                 curr_menu = Menu::FRIENDS_ADD;
                 return;
             }
@@ -969,8 +1010,7 @@ void MENU_ADD_FRIENDS_add() {
             // Menu after a candidate was clicked.
 
             // If red button is pressed, start showing other friend candidates.
-            if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                                red_button_stable_state, last_red_debounce_time)) {
+            if (is_red_button_pressed()) {
                 // Try to get another candidate.
                 curr_candidate = get_first_friend_candidate(logged_user);
                 if (curr_candidate == -1) {
@@ -981,7 +1021,8 @@ void MENU_ADD_FRIENDS_add() {
 
                 lcd.clear();
                 lcd.setCursor(0, 0);
-                lcd.print(names[curr_candidate]);
+                lcd.print(users[curr_candidate].name);
+                set_color_yellow();
 
                 added_a_friend = false;
             }
@@ -996,11 +1037,11 @@ void MENU_ADD_FRIENDS_no_candidate() {
     lcd.print(F("Noone to"));
     lcd.setCursor(0, 1);
     lcd.print(F("befriend"));
+    set_color_red();
 
     while (true) {
         // If red button is pressed, go to FRIENDS_add menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::FRIENDS_ADD;
             return;
         }
@@ -1020,6 +1061,7 @@ void MENU_NOTIFICATIONS_see() {
     // Display first notification.
     int8_t curr_notif = 0;
     display_notification(users[logged_user].notifications[curr_notif]);
+    set_color_purple();
 
     // Start in the view mode.
     NotifMode mode = NotifMode::VIEW;
@@ -1053,11 +1095,13 @@ void MENU_NOTIFICATIONS_see() {
 
                     lcd.clear();
                     lcd.setCursor(0, 0);
-                    lcd.print(names[notif.from_who]);
+                    lcd.print(users[notif.from_who].name);
                     lcd.setCursor(0, 1);
                     lcd.print(F("is now a friend"));
 
                     mode = NotifMode::ACCEPTED;
+                    set_color_green();
+                    sound_accept();
                     continue;
                 }
             }
@@ -1075,14 +1119,15 @@ void MENU_NOTIFICATIONS_see() {
                     lcd.print(F("Req rejected"));
 
                     mode = NotifMode::REJECTED;
+                    set_color_red();
+                    sound_reject();
                     continue;
                 }
             }
 
             // If the joystick button is pressed, mark the notification as seen
             // (if it is of type RecvFromFriend or ReqAccepted)
-            if (is_button_pressed(JOYSTICK_SW_PIN, last_joy_button_state,
-                                  joy_button_stable_state, last_joy_debounce_time)) {
+            if (is_joy_button_pressed()) {
                 // Check the type of the notif.
                 Notification &notif = users[logged_user].notifications[curr_notif];
                 if (notif.type == NotifType::RecvFromFriend || notif.type == NotifType::ReqAccepted) {
@@ -1108,8 +1153,7 @@ void MENU_NOTIFICATIONS_see() {
             }
 
             // If red button is pressed, go to LOGGED_NOTIFS menu.
-            if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                                red_button_stable_state, last_red_debounce_time)) {
+            if (is_red_button_pressed()) {
                 curr_menu = Menu::LOGGED_NOTIFS;
                 return;
             }
@@ -1118,9 +1162,8 @@ void MENU_NOTIFICATIONS_see() {
         else if (mode == NotifMode::ACCEPTED || mode == NotifMode::REJECTED) {
             // Menu after accepting/rejecting a friend request.
 
-            // If red button is pressed, go back to displaying notifications.
-            if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                                red_button_stable_state, last_red_debounce_time)) {
+            // If joystick button is pressed, go back to displaying notifications.
+            if (is_joy_button_pressed()) {
                 // Remove the current notification.
                 uint8_t left = mark_notif_as_seen(logged_user, curr_notif);
 
@@ -1137,6 +1180,7 @@ void MENU_NOTIFICATIONS_see() {
                 display_notification(users[logged_user].notifications[curr_notif]);
 
                 mode = NotifMode::VIEW;
+                set_color_purple();
                 continue;
             }
         }
@@ -1154,17 +1198,55 @@ void MENU_NOTIFICATIONS_no_new() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("No new notif"));
+    set_color_purple();
 
     while (true) {
         // If red button is pressed, go to LOGGED_NOTIFS menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::LOGGED_NOTIFS;
             return;
         }
     }
 }
 
+
+/*=====================================================================================*/
+/* CHANGE_PIN menu */
+void MENU_CHANGE_PIN_enter() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Enter new PIN:"));
+    set_color_blue();
+
+    // For safety reasons, read to a uint32_t
+    uint32_t pin_big = read_number_input(ReadInputType::PIN);
+    uint16_t pin = pin_big % 10000;
+
+    if (pin == 0) {
+        // Red button was pressed, abort PIN change.
+        curr_menu = Menu::LOGGED_CHANGE_PIN;
+        return;
+    }
+
+    users[logged_user].pin = pin;
+    curr_menu = Menu::CHANGE_PIN_DONE;
+}
+
+
+void MENU_CHANGE_PIN_done() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("New PIN saved"));
+    set_color_blue();
+    sound_accept();
+
+    while (true) {
+        if (is_red_button_pressed()) {
+            curr_menu = Menu::LOGGED_HELLO;
+            return;
+        }
+    }
+}
 
 
 /*=====================================================================================*/
@@ -1173,6 +1255,7 @@ void MENU_ENTER_sum() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Enter sum:"));
+    set_color_yellow();
 
     uint32_t sum = read_number_input(ReadInputType::SUM);
 
@@ -1194,6 +1277,8 @@ void MENU_ENTER_sum() {
     }
     else if (enter_sum_type == EnterSum::MAIN_TO_ECO) {
         if (users[logged_user].checking_sum >= sum) {
+            apply_interest(users[logged_user]);
+
             users[logged_user].checking_sum -= sum;
             users[logged_user].economy_sum += sum;
             curr_menu = Menu::TRANSACTION_DONE;
@@ -1221,6 +1306,12 @@ void MENU_ENTER_sum() {
         }
     }
     else if (enter_sum_type == EnterSum::SEND_FRIEND) {
+        if (friend_to_send_money == NO_USER) {
+            enter_sum_type = EnterSum::NO_ENTER;
+            curr_menu = Menu::ERROR;
+            return;
+        }
+
         if (users[logged_user].checking_sum >= sum) {
             users[logged_user].checking_sum -= sum;
             users[friend_to_send_money].checking_sum += sum;
@@ -1231,7 +1322,8 @@ void MENU_ENTER_sum() {
 
             curr_menu = Menu::TRANSACTION_DONE;
 
-            // TODO: Reset friend_to_send_money
+            // Reset friend_to_send_money
+            friend_to_send_money = NO_USER;
 
         } else {
             curr_menu = Menu::NO_FUNDS;
@@ -1250,12 +1342,16 @@ void MENU_ENTER_sum() {
 void MENU_TRANSACTION_DONE_done() {
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print(F("Done"));
+    lcd.print(F("Transaction"));
+    lcd.setCursor(0, 1);
+    lcd.print(F("successful"));
+
+    set_color_green();
+    sound_transaction_successful();
 
     while (true) {
         // If red button is pressed, go back to previous menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             if (enter_sum_type == EnterSum::ADD_CASH) curr_menu = Menu::MAIN_ACC_SUM;
             else if (enter_sum_type == EnterSum::MAIN_TO_ECO) curr_menu = Menu::MAIN_ACC_SUM;
             else if (enter_sum_type == EnterSum::ECO_TO_MAIN) curr_menu = Menu::ECO_ACC_SUM;
@@ -1274,12 +1370,14 @@ void MENU_TRANSACTION_DONE_done() {
 void MENU_NO_funds() {
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print(F("No funds"));
+    lcd.print(F("Not enough funds"));
+
+    set_color_red();
+    sound_transaction_failed();
 
     while (true) {
         // If red button is pressed, go back to previous menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             if (enter_sum_type == EnterSum::ADD_CASH) curr_menu = Menu::MAIN_ACC_SUM;
             else if (enter_sum_type == EnterSum::MAIN_TO_ECO) curr_menu = Menu::MAIN_ACC_SUM;
             else if (enter_sum_type == EnterSum::ECO_TO_MAIN) curr_menu = Menu::ECO_ACC_SUM;
@@ -1301,20 +1399,20 @@ void MENU_DEBUG_wdt() {
     lcd.print(F("WDT:"));
 
     lcd.setCursor(0, 1);
-    lcd.print(wdt_counter);
+    lcd.print(get_wdt_counter());
+    set_color_yellow();
 
     while (true) {
-        // If the joystick button is pressed, reprint the counter.
+        // If the joystick is pushed up, reprint the counter.
         if (joystick_to_up()) {
             lcd.setCursor(0, 1);
             lcd.print(BLANK);
             lcd.setCursor(0, 1);
-            lcd.print(wdt_counter);
+            lcd.print(get_wdt_counter());
         }
 
         // If the red button is pressed, return to START menu.
-        if (is_button_pressed(RED_BUTTON_PIN, last_red_button_state,
-                              red_button_stable_state, last_red_debounce_time)) {
+        if (is_red_button_pressed()) {
             curr_menu = Menu::START_DEBUG;
             return;
         }
