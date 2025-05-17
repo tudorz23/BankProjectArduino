@@ -468,6 +468,11 @@ void MENU_LOGGED_friends() {
             return;
         }
 
+        if (joystick_to_the_right()) {
+            curr_menu = Menu::LOGGED_CHANGE_PIN;
+            return;
+        }
+
         // If Joystick button is pressed, access the FRIENDS menu.
         if (is_joy_button_pressed()) {
             curr_menu = Menu::FRIENDS_SEE;
@@ -521,6 +526,31 @@ void MENU_LOGGED_notifications() {
     }
 }
 
+
+void MENU_LOGGED_change_pin() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Change PIN"));
+
+    while (true) {
+        if (joystick_to_the_left()) {
+            curr_menu = Menu::LOGGED_FRIENDS;
+            return;
+        }
+
+        // If Joystick button is pressed, access the CHANGE_PIN menu.
+        if (is_joy_button_pressed()) {
+            curr_menu = Menu::CHANGE_PIN_ENTER;
+            return;
+        }
+
+        // If red button is pressed, go to LOGOUT menu.
+        if (is_red_button_pressed()) {
+            curr_menu = Menu::LOGGED_LOGOUT;
+            return;
+        }
+    }
+}
 
 /*=====================================================================================*/
 /* MAIN_ACC menus */
@@ -1138,6 +1168,42 @@ void MENU_NOTIFICATIONS_no_new() {
         // If red button is pressed, go to LOGGED_NOTIFS menu.
         if (is_red_button_pressed()) {
             curr_menu = Menu::LOGGED_NOTIFS;
+            return;
+        }
+    }
+}
+
+
+/*=====================================================================================*/
+/* CHANGE_PIN menu */
+void MENU_CHANGE_PIN_enter() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Enter new PIN:"));
+
+    // For safety reasons, read to a uint32_t
+    uint32_t pin_big = read_number_input(ReadInputType::PIN);
+    uint16_t pin = pin_big % 10000;
+
+    if (pin == 0) {
+        // Red button was pressed, abort PIN change.
+        curr_menu = Menu::LOGGED_CHANGE_PIN;
+        return;
+    }
+
+    users[logged_user].pin = pin;
+    curr_menu = Menu::CHANGE_PIN_DONE;
+}
+
+
+void MENU_CHANGE_PIN_done() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("New PIN saved"));
+
+    while (true) {
+        if (is_red_button_pressed()) {
+            curr_menu = Menu::LOGGED_HELLO;
             return;
         }
     }

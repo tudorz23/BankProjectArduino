@@ -151,6 +151,9 @@ void loop() {
     case Menu::LOGGED_NOTIFS:
         MENU_LOGGED_notifications();
         break;
+    case Menu::LOGGED_CHANGE_PIN:
+        MENU_LOGGED_change_pin();
+        break;
 
     // MAIN_ACC menus
     case Menu::MAIN_ACC_SUM:
@@ -215,6 +218,14 @@ void loop() {
         break;
     case Menu::NOTIFICATIONS_NO_NEW:
         MENU_NOTIFICATIONS_no_new();
+        break;
+
+    // CHANGE_PIN menus
+    case Menu::CHANGE_PIN_ENTER:
+        MENU_CHANGE_PIN_enter();
+        break;
+    case Menu::CHANGE_PIN_DONE:
+        MENU_CHANGE_PIN_done();
         break;
 
     // ENTER_SUM menu
