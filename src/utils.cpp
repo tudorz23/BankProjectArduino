@@ -113,11 +113,6 @@ void apply_interest(User &user) {
     // The wdt_counter is incremented every 1 second.
     uint16_t elapsed_time = get_wdt_counter() - user.last_interest_update_time;
 
-    #ifdef DEBUG
-    Serial.println(user.last_interest_update_time);
-    Serial.println(elapsed_time);
-    #endif
-
     // The interest is applied every APPLY_INTEREST_INTERVAL seconds.
     uint8_t times_to_apply = elapsed_time / APPLY_INTEREST_INTERVAL;
 
@@ -128,12 +123,6 @@ void apply_interest(User &user) {
 
     // Last update basically happened at last_time + times_to_apply * INTERVAL.
     user.last_interest_update_time += times_to_apply * APPLY_INTEREST_INTERVAL;
-
-    #ifdef DEBUG
-    Serial.println(user.last_interest_update_time);
-
-    Serial.println();
-    #endif
 }
 
 

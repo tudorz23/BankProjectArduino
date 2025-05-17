@@ -3,6 +3,7 @@
 #include "debounce.h"
 #include "sounds.h"
 #include "wdt_counter.h"
+#include "lights.h"
 
 /* STATIC VARIABLES (private to this file) */
 
@@ -12,6 +13,9 @@ static EnterSum enter_sum_type = EnterSum::NO_ENTER;
 // To know in the Menu::ENTER_SUM who is the target friend (when it is the case).
 static int8_t friend_to_send_money = NO_USER;
 
+// To know if the greeting message should be displayed in Menu::LOGGED_HELLO.
+static bool refresh_logged_hello = true;
+
 
 /*=====================================================================================*/
 /* ERROR menu */
@@ -20,6 +24,7 @@ void MENU_error() {
     lcd.setCursor(0, 0);
     lcd.print(F("ERROR"));
 
+    set_color_red();
     sound_login_failed();
 
     while (true) {
@@ -37,6 +42,7 @@ void MENU_START_hello() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Welcome!"));
+    set_color_green();
 
     while (true) {
         if (joystick_to_the_right()) {
@@ -51,6 +57,7 @@ void MENU_START_login() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Login"));
+    set_color_green();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -76,6 +83,7 @@ void MENU_START_register() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Register"));
+    set_color_green();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -101,6 +109,7 @@ void MENU_START_debug() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Debug"));
+    set_color_green();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -123,6 +132,7 @@ void MENU_REGISTER_scan() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Scan card"));
+    set_color_purple();
 
     while (true) {
         // If red button is pressed, abort scanning and go back to START menu.
@@ -144,10 +154,6 @@ void MENU_REGISTER_scan() {
         char uid[UID_SIZE + 1];
         extract_uid(uid);
 
-        #ifdef DEBUG
-        Serial.println(uid);
-        #endif
-
         logged_user = get_user_idx_from_uid(uid);
         if (logged_user == NO_USER) {
             curr_menu = Menu::ERROR;
@@ -160,12 +166,6 @@ void MENU_REGISTER_scan() {
             curr_menu = Menu::REGISTER_ALREADY_REG;
             return;
         }
-
-        #ifdef DEBUG
-        Serial.println(logged_user);
-        Serial.println(names[logged_user]);
-        Serial.println();
-        #endif
 
         curr_menu = Menu::REGISTER_PIN;
         return;
@@ -180,6 +180,7 @@ void MENU_REGISTER_already_reg() {
     lcd.setCursor(0, 1);
     lcd.print(F("registered"));
 
+    set_color_red();
     sound_login_failed();
 
     while (true) {
@@ -196,6 +197,7 @@ void MENU_REGISTER_pin() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Enter PIN:"));
+    set_color_purple();
 
     // For safety reasons, read to a uint32_t
     uint32_t pin_big = read_number_input(ReadInputType::PIN);
@@ -217,14 +219,11 @@ void MENU_REGISTER_pin() {
     users[logged_user].pin = pin;
     users[logged_user].notif_cnt = 0;
 
-    #ifdef DEBUG
-    Serial.println(pin);
-    Serial.println();
-    #endif
-
     curr_menu = Menu::LOGGED_HELLO;
     greet_logged_user();
+    set_color_yellow();
     sound_login_successful();
+    refresh_logged_hello = false;
 }
 
 
@@ -234,6 +233,7 @@ void MENU_LOGIN_scan() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Scan card"));
+    set_color_blue();
 
     while (true) {
         // If red button is pressed, abort scanning and go back to START menu.
@@ -255,21 +255,11 @@ void MENU_LOGIN_scan() {
         char uid[UID_SIZE + 1];
         extract_uid(uid);
 
-        #ifdef DEBUG
-        Serial.println(uid);
-        #endif
-
         logged_user = get_user_idx_from_uid(uid);
         if (logged_user == NO_USER) {
             curr_menu = Menu::ERROR;
             return;
         }
-
-        #ifdef DEBUG
-        Serial.println(logged_user);
-        Serial.println(names[logged_user]);
-        Serial.println();
-        #endif
 
         // Check if the user is registered.
         if (!is_user_registered(logged_user)) {
@@ -289,6 +279,7 @@ void MENU_LOGIN_not_registered() {
     lcd.setCursor(0, 0);
     lcd.print(F("Not registered"));
 
+    set_color_red();
     sound_login_failed();
 
     while (true) {
@@ -305,6 +296,7 @@ void MENU_LOGIN_enter_pin() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Enter PIN:"));
+    set_color_blue();
 
     // For safety reasons, read to a uint32_t
     uint32_t pin_big = read_number_input(ReadInputType::PIN);
@@ -325,7 +317,9 @@ void MENU_LOGIN_enter_pin() {
 
     curr_menu = Menu::LOGGED_HELLO;
     greet_logged_user();
+    set_color_yellow();
     sound_login_successful();
+    refresh_logged_hello = false;
 }
 
 
@@ -334,6 +328,7 @@ void MENU_LOGIN_wrong_pin() {
     lcd.setCursor(0, 0);
     lcd.print(F("Wrong PIN"));
 
+    set_color_red();
     sound_login_failed();
 
     while (true) {
@@ -349,8 +344,18 @@ void MENU_LOGIN_wrong_pin() {
 /*=====================================================================================*/
 /* LOGGED menus */
 void MENU_LOGGED_hello() {
-    greet_logged_user();
+    if (logged_user == NO_USER) {
+        curr_menu = Menu::ERROR;
+        return;
+    }
 
+    if (refresh_logged_hello) {
+        set_color_yellow();
+        greet_logged_user();
+    } else {
+        refresh_logged_hello = true;
+    }
+    
     while (true) {
         if (joystick_to_the_left()) {
             curr_menu = Menu::LOGGED_NOTIFS;
@@ -375,6 +380,7 @@ void MENU_LOGGED_main_acc() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Main account"));
+    set_color_yellow();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -406,6 +412,7 @@ void MENU_LOGGED_eco_acc() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Eco account"));
+    set_color_yellow();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -437,6 +444,7 @@ void MENU_LOGGED_logout() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Surely logout?"));
+    set_color_red();
 
     while (true) {
         // If the joystick button is pressed, confirm the logout.
@@ -461,6 +469,7 @@ void MENU_LOGGED_friends() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Friends"));
+    set_color_yellow();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -496,6 +505,7 @@ void MENU_LOGGED_notifications() {
     lcd.print(users[logged_user].notif_cnt);
     lcd.setCursor(2, 1);
     lcd.print("waiting");
+    set_color_yellow();
 
     if (users[logged_user].notif_cnt > 0) {
         sound_new_notification();
@@ -531,6 +541,7 @@ void MENU_LOGGED_change_pin() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Change PIN"));
+    set_color_yellow();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -560,6 +571,7 @@ void MENU_MAIN_ACC_sum() {
     lcd.print(F("Main acc sum:"));
     lcd.setCursor(0, 1);
     lcd.print(users[logged_user].checking_sum);
+    set_color_blue();
 
     while (true) {
         if (joystick_to_the_right()) {
@@ -580,6 +592,7 @@ void MENU_MAIN_ACC_add() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Add cash"));
+    set_color_blue();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -612,6 +625,7 @@ void MENU_MAIN_ACC_pay() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Pay"));
+    set_color_blue();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -644,6 +658,7 @@ void MENU_MAIN_ACC_to_eco() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("To Eco"));
+    set_color_blue();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -676,6 +691,7 @@ void MENU_MAIN_ACC_send_friend() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Send to friend"));
+    set_color_blue();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -705,6 +721,7 @@ void MENU_ECO_ACC_sum() {
     lcd.setCursor(0, 0);
     lcd.print(F("Eco acc sum:"));
     lcd.setCursor(0, 1);
+    set_color_green();
 
     // Add interest to the economy sum.
     apply_interest(users[logged_user]);
@@ -729,6 +746,7 @@ void MENU_ECO_ACC_to_main() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("To Main"));
+    set_color_green();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -766,6 +784,7 @@ void MENU_SEND_FRIEND_choose() {
     }
 
     lcd.print(users[curr_friend].name);
+    set_color_purple();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -803,6 +822,7 @@ void MENU_SEND_FRIEND_no_friend() {
     lcd.print(F("You have"));
     lcd.setCursor(0, 1);
     lcd.print(F("no friends"));
+    set_color_red();
 
     while (true) {
         // If red button is pressed, go to MAIN_ACC_SEND_FRIEND menu.
@@ -820,6 +840,7 @@ void MENU_FRIENDS_see() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("See friends"));
+    set_color_yellow();
 
     while (true) {
         if (joystick_to_the_right()) {
@@ -846,6 +867,7 @@ void MENU_FRIENDS_add() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Add friends"));
+    set_color_yellow();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -882,6 +904,7 @@ void MENU_VIEW_FRIENDS_see() {
     }
 
     lcd.print(users[curr_friend].name);
+    set_color_yellow();
 
     while (true) {
         if (joystick_to_the_left()) {
@@ -911,6 +934,7 @@ void MENU_VIEW_FRIENDS_no_friend() {
     lcd.print(F("You have"));
     lcd.setCursor(0, 1);
     lcd.print(F("no friends"));
+    set_color_red();
 
     while (true) {
         // If red button is pressed, go to FRIENDS_see menu.
@@ -936,6 +960,7 @@ void MENU_ADD_FRIENDS_add() {
     }
 
     lcd.print(users[curr_candidate].name);
+    set_color_yellow();
 
     bool added_a_friend = false;
 
@@ -969,6 +994,8 @@ void MENU_ADD_FRIENDS_add() {
 
                 lcd.setCursor(0, 1);
                 lcd.print("Friend req sent");
+                set_color_green();
+                sound_accept();
                 continue;
             }
 
@@ -995,6 +1022,7 @@ void MENU_ADD_FRIENDS_add() {
                 lcd.clear();
                 lcd.setCursor(0, 0);
                 lcd.print(users[curr_candidate].name);
+                set_color_yellow();
 
                 added_a_friend = false;
             }
@@ -1009,6 +1037,7 @@ void MENU_ADD_FRIENDS_no_candidate() {
     lcd.print(F("Noone to"));
     lcd.setCursor(0, 1);
     lcd.print(F("befriend"));
+    set_color_red();
 
     while (true) {
         // If red button is pressed, go to FRIENDS_add menu.
@@ -1032,6 +1061,7 @@ void MENU_NOTIFICATIONS_see() {
     // Display first notification.
     int8_t curr_notif = 0;
     display_notification(users[logged_user].notifications[curr_notif]);
+    set_color_purple();
 
     // Start in the view mode.
     NotifMode mode = NotifMode::VIEW;
@@ -1070,6 +1100,8 @@ void MENU_NOTIFICATIONS_see() {
                     lcd.print(F("is now a friend"));
 
                     mode = NotifMode::ACCEPTED;
+                    set_color_green();
+                    sound_accept();
                     continue;
                 }
             }
@@ -1087,6 +1119,8 @@ void MENU_NOTIFICATIONS_see() {
                     lcd.print(F("Req rejected"));
 
                     mode = NotifMode::REJECTED;
+                    set_color_red();
+                    sound_reject();
                     continue;
                 }
             }
@@ -1128,8 +1162,8 @@ void MENU_NOTIFICATIONS_see() {
         else if (mode == NotifMode::ACCEPTED || mode == NotifMode::REJECTED) {
             // Menu after accepting/rejecting a friend request.
 
-            // If red button is pressed, go back to displaying notifications.
-            if (is_red_button_pressed()) {
+            // If joystick button is pressed, go back to displaying notifications.
+            if (is_joy_button_pressed()) {
                 // Remove the current notification.
                 uint8_t left = mark_notif_as_seen(logged_user, curr_notif);
 
@@ -1146,6 +1180,7 @@ void MENU_NOTIFICATIONS_see() {
                 display_notification(users[logged_user].notifications[curr_notif]);
 
                 mode = NotifMode::VIEW;
+                set_color_purple();
                 continue;
             }
         }
@@ -1163,6 +1198,7 @@ void MENU_NOTIFICATIONS_no_new() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("No new notif"));
+    set_color_purple();
 
     while (true) {
         // If red button is pressed, go to LOGGED_NOTIFS menu.
@@ -1180,6 +1216,7 @@ void MENU_CHANGE_PIN_enter() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Enter new PIN:"));
+    set_color_blue();
 
     // For safety reasons, read to a uint32_t
     uint32_t pin_big = read_number_input(ReadInputType::PIN);
@@ -1200,6 +1237,8 @@ void MENU_CHANGE_PIN_done() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("New PIN saved"));
+    set_color_blue();
+    sound_accept();
 
     while (true) {
         if (is_red_button_pressed()) {
@@ -1216,6 +1255,7 @@ void MENU_ENTER_sum() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Enter sum:"));
+    set_color_yellow();
 
     uint32_t sum = read_number_input(ReadInputType::SUM);
 
@@ -1306,6 +1346,7 @@ void MENU_TRANSACTION_DONE_done() {
     lcd.setCursor(0, 1);
     lcd.print(F("successful"));
 
+    set_color_green();
     sound_transaction_successful();
 
     while (true) {
@@ -1331,6 +1372,7 @@ void MENU_NO_funds() {
     lcd.setCursor(0, 0);
     lcd.print(F("Not enough funds"));
 
+    set_color_red();
     sound_transaction_failed();
 
     while (true) {
@@ -1358,6 +1400,7 @@ void MENU_DEBUG_wdt() {
 
     lcd.setCursor(0, 1);
     lcd.print(get_wdt_counter());
+    set_color_yellow();
 
     while (true) {
         // If the joystick is pushed up, reprint the counter.
