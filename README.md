@@ -256,6 +256,7 @@ Created using **Autodesk Fusion360**.
 - If, at a later time, another configuration of the WDT might be preferred (i.e. interrupt after a time interval), only this module is to be modified, without interfering with other sections that use timers.
 - The source file contains a static variable (private to the file) that represents the counter, offering an init and a getter method for outside modules.
 - The ISR is rather short and simple, by only incrementing the counter value.
+- The live value of the counter can be observed in the debug menu.
 
 **debounce**
 - Offers methods for checking if the joystick is flicked to the right/left/up/down, if the joystick button is pressed and if the red button is pressed.
@@ -300,6 +301,7 @@ Created using **Autodesk Fusion360**.
 
 ## Results
 - The final result is a fully functional, robust device, that encompasses all the proposed features in an intuitive and efficient way, both hardware and software wise.
+- [Demo on YouTube](https://youtu.be/4Y1_n8hq_Kc)
 
 ---
 
